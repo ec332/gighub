@@ -34,7 +34,7 @@ Required environment variables:
 ```env
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key
-DATABASE_URL=your-database-url
+MONGODB_URI=your-database-url
 ```
 
 4. Start the development server:
