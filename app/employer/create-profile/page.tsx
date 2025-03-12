@@ -13,7 +13,7 @@ export default function CreateEmployerProfile() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
     } else if (session?.user?.userType !== 'employer') {
-      router.push('/employee/dashboard');
+      router.push('/freelancer/dashboard');
     }
   }, [session, status, router]);
 

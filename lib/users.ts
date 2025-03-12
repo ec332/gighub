@@ -4,7 +4,7 @@ import clientPromise from './mongodb';
 export interface User {
   email: string;
   password: string;
-  userType: 'employer' | 'employee';
+  userType: 'employer' | 'freelancer';
 }
 
 export async function createUser(userData: User) {

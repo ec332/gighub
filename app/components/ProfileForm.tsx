@@ -14,7 +14,7 @@ interface FormField {
 }
 
 interface ProfileFormProps {
-  userType: 'employer' | 'employee';
+  userType: 'employer' | 'freelancer';
   onSubmit: (data: any) => Promise<void>;
 }
 
@@ -61,8 +61,8 @@ export default function ProfileForm({ userType, onSubmit }: ProfileFormProps) {
       const formData = new FormData(e.currentTarget);
       const data = Object.fromEntries(formData.entries());
       
-      // Convert skills string to array for employee profiles
-      if (userType === 'employee' && data.skills) {
+      // Convert skills string to array for freelancer profiles
+      if (userType === 'freelancer' && data.skills) {
         data.skills = (data.skills as string).split(',').map(skill => skill.trim());
       }
 

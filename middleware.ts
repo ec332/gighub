@@ -16,7 +16,7 @@ export async function middleware(request: NextRequestWithAuth) {
   
   // Define dashboard paths
   const employerPaths = ['/employer', '/employer/dash', '/employer/dashboard'];
-  const employeePaths = ['/employee', '/employee/dash', '/employee/dashboard'];
+  const employeePaths = ['/freelancer', '/freelancer/dash', '/freelancer/dashboard'];
   
   // Define API paths
   const isApiPage = pathname.startsWith('/api');
@@ -30,7 +30,7 @@ export async function middleware(request: NextRequestWithAuth) {
   if (pathname === '/') {
     if (token) {
       return NextResponse.redirect(new URL(
-        token.userType === 'employer' ? '/employer/dashboard' : '/employee/dashboard',
+        token.userType === 'employer' ? '/employer/dashboard' : '/freelancer/dashboard',
         request.url
       ));
     }
@@ -42,7 +42,7 @@ export async function middleware(request: NextRequestWithAuth) {
     // Don't allow authenticated users to access auth pages
     if (isAuthPage) {
       return NextResponse.redirect(new URL(
-        token.userType === 'employer' ? '/employer/dashboard' : '/employee/dashboard',
+        token.userType === 'employer' ? '/employer/dashboard' : '/freelancer/dashboard',
         request.url
       ));
     }
@@ -60,22 +60,22 @@ export async function middleware(request: NextRequestWithAuth) {
       }
     }
 
-    // Handle employee paths
-    if (token.userType === 'employee') {
+    // Handle freelancer paths
+    if (token.userType === 'freelancer') {
       if (pathStartsWith(employerPaths)) {
-        return NextResponse.redirect(new URL('/employee/dashboard', request.url));
+        return NextResponse.redirect(new URL('/freelancer/dashboard', request.url));
       }
-      if (pathname === '/employee' || pathname === '/employee/dash') {
-        return NextResponse.redirect(new URL('/employee/dashboard', request.url));
+      if (pathname === '/freelancer' || pathname === '/freelancer/dash') {
+        return NextResponse.redirect(new URL('/freelancer/dashboard', request.url));
       }
-      if (pathname === '/employee/dashboard') {
+      if (pathname === '/freelancer/dashboard') {
         return NextResponse.next();
       }
     }
 
     // Redirect to appropriate dashboard for any other paths
     return NextResponse.redirect(new URL(
-      token.userType === 'employer' ? '/employer/dashboard' : '/employee/dashboard',
+      token.userType === 'employer' ? '/employer/dashboard' : '/freelancer/dashboard',
       request.url
     ));
   }

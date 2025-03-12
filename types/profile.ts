@@ -1,5 +1,5 @@
 export interface Profile {
   email: string;
   password: string;
-  userType: 'employer' | 'employee';
+  userType: 'employer' | 'freelancer';
 } 

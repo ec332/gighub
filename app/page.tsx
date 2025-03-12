@@ -15,7 +15,7 @@ export default function Home() {
       router.push(
         session.user?.userType === 'employer' 
           ? '/employer/dashboard' 
-          : '/employee/dashboard'
+          : '/freelancer/dashboard'
       );
     } else {
       router.push('/auth/signup');

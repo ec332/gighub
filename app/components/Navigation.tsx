@@ -25,7 +25,7 @@ export default function Navigation() {
             {session ? (
               <>
                 <Link 
-                  href={session.user?.userType === 'employer' ? '/employer/dashboard' : '/employee/dashboard'}
+                  href={session.user?.userType === 'employer' ? '/employer/dashboard' : '/freelancer/dashboard'}
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
                   Dashboard

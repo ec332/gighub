@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function SignIn() {
   const router = useRouter();
-  const [userType, setUserType] = useState('employee');
+  const [userType, setUserType] = useState('freelancer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,7 +27,7 @@ export default function SignIn() {
         return;
       }
 
-      router.push(userType === 'employer' ? '/employer/dashboard' : '/employee/dashboard');
+      router.push(userType === 'employer' ? '/employer/dashboard' : '/freelancer/dashboard');
     } catch (error) {
       setError('An error occurred');
     }
@@ -52,7 +52,7 @@ export default function SignIn() {
                 onChange={(e) => setUserType(e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                <option value="employee">Employee</option>
+                <option value="freelancer">Freelancer</option>
                 <option value="employer">Employer</option>
               </select>
             </div>
