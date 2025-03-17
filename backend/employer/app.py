@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from config import Config
+from dotenv import load_dotenv
+import os
 
 # Initialize the Flask app and database connection
 app = Flask(__name__)
-app.config.from_object(Config)
 
+load_dotenv()
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL_EMPLOYER", "postgresql://localhost/mydatabase")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Define the Employer model
