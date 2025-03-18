@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import requests
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root@localhost:3306/gighub'
@@ -34,75 +35,97 @@ class Compliance(db.Model):
             "remarks": self.remarks
         }
     
+# Microservice base URL (replace with actual URL)
+PUBLISH_JOB_LISTING = ""
 
-# @app.route('/compliance/<int:job_id>', methods=['POST'])
-# def submit_compliance_check(job_id):
+# job_data should be 
+# {
+#     "job": {
+#         "id": 1,
+#         "title": "Software Engineer",
+#         "description": "Develop and maintain backend services.",
+#         "category": "IT",
+#         "price": 5000,
+#         "skills": "Python, Flask, SQL"
+#     }
+# }
 
-#     job_service_url = f"http://localhost:5001/job/{job_id}"
-#     job_response = requests.get(job_service_url)
+@app.route('/compliance/<int:job_id>', methods=['POST'])
+def submit_compliance_check(job_id):
 
-#     if job_response.status_code == 404:
-#         return jsonify({"error": "Job not found"}), 404
+    publish_job_url = f"{PUBLISH_JOB_LISTING}{job_id}"
+    job_response = requests.get(publish_job_url)
 
-#     job_data = job_response.json().get("job")
+    if job_response.status_code == 404:
+        return jsonify({"error": "Job not found"}), 404
 
-#     if not job_data:
-#         return jsonify({"error": "Failed to retrieve job details"}), 500
+    if job_response.status_code != 200:
+        return jsonify({"error": "Failed to retrieve job details"}), 500
 
-#     is_compliant, remarks = check_job_compliance(job_data)
+    job_data = job_response.json().get("job")
 
-#     new_compliance = Compliance(
-#         job_id=job_id,
-#         is_compliant=is_compliant,
-#         remarks=remarks
-#     )
+    if not job_data:
+        return jsonify({"error": "Invalid job data from microservice"}), 500
 
-#     db.session.add(new_compliance)
-#     db.session.commit()
+    is_compliant, remarks = check_job_compliance(job_data)
 
-#     return jsonify({
-#         "message": "Compliance check completed",
-#         "compliance": new_compliance.json()
-#     }), 201
+    new_compliance = Compliance(
+        job_id=job_id,
+        is_compliant=is_compliant,
+        remarks=remarks
+    )
 
-# def check_job_compliance(job):
-#     """
-#     Evaluates if a job listing meets compliance standards.
+    db.session.add(new_compliance)
+    db.session.commit()
 
-#     :param job: Job object (database record)
-#     :return: (is_compliant, remarks)
-#     """
-#     remarks = []
-#     is_compliant = True  # Assume compliant unless conditions fail
+    return jsonify({
+        "message": "Compliance check completed",
+        "compliance": {
+            "job_id": job_id,
+            "is_compliant": is_compliant,
+            "remarks": remarks
+        }
+    }), 201
 
-#     # ✅ Rule 1: Title must not be empty
-#     if not job.title or job.title.strip() == "":
-#         remarks.append("Title is missing.")
-#         is_compliant = False
+def check_job_compliance(job):
+    """
+    Evaluates if a job listing meets compliance standards.
 
-#     # ✅ Rule 2: Description must be at least 50 characters
-#     if not job.description or len(job.description.strip()) < 50:
-#         remarks.append("Description must be at least 50 characters.")
-#         is_compliant = False
+    :param job: Job dictionary (from request JSON)
+    :return: (is_compliant, remarks)
+    """
+    remarks = []
+    is_compliant = True  
 
-#     # ✅ Rule 3: Category must be valid
-#     valid_categories = {"IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering"}
-#     if not job.category or job.category not in valid_categories:
-#         remarks.append(f"Invalid category. Must be one of {valid_categories}.")
-#         is_compliant = False
+    # Rule 1: Title must not be empty
+    if not job.get("title") or job["title"].strip() == "":
+        remarks.append("Title is missing.")
+        is_compliant = False
 
-#     # ✅ Rule 4: Price must be greater than zero
-#     if job.price is None or job.price <= 0:
-#         remarks.append("Price must be greater than zero.")
-#         is_compliant = False
+    # Rule 2: Description must be at least 50 characters
+    if not job.get("description") or len(job["description"].strip()) < 50:
+        remarks.append("Description must be at least 50 characters.")
+        is_compliant = False
 
-#     # ✅ Rule 5: At least one skill must be listed
-#     if not job.skills or job.skills.strip() == "":
-#         remarks.append("At least one skill is required.")
-#         is_compliant = False
+    # Rule 3: Category must be valid
+    valid_categories = {"IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering"}
+    if not job.get("category") or job["category"] not in valid_categories:
+        remarks.append(f"Invalid category. Must be one of {valid_categories}.")
+        is_compliant = False
 
-#     return is_compliant, ", ".join(remarks) if remarks else "Job is compliant."
+    # Rule 4: Price must be greater than zero
+    if job.get("price") is None or job["price"] <= 0:
+        remarks.append("Price must be greater than zero.")
+        is_compliant = False
+
+    # Rule 5: At least one skill must be listed
+    if not job.get("skills") or job["skills"].strip() == "":
+        remarks.append("At least one skill is required.")
+        is_compliant = False
+
+    return is_compliant, ", ".join(remarks) if remarks else "Job is compliant."
 
 
 if __name__ == '__main__':
     app.run(port=5002, debug=True)
+
