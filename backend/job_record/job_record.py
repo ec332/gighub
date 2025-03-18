@@ -111,26 +111,12 @@ def update_job_details(job_id):
             return jsonify({"error": f"Invalid status. Must be one of {valid_statuses}"}), 400
         job.status = new_status
 
-    # if 'is_compliant' in data or 'remarks' in data:
-    #     compliance = Compliance.query.filter_by(job_id=job.id).first()
-    #     if not compliance:
-    #         compliance = Compliance(job_id=job.id)  
-    #         db.session.add(compliance)
-
-        # if 'is_compliant' in data:
-        #     compliance.is_compliant = data['is_compliant']
-
-        # if 'remarks' in data:
-        #     compliance.remarks = data['remarks']
-
     db.session.commit()
 
     return jsonify({
-        "message": "Job status and compliance updated successfully",
+        "message": "Job status updated successfully",
         "job": job.json(),
-        # "compliance": compliance.json() if 'is_compliant' in data or 'remarks' in data else None
     }), 200
-
 
 # browse available job listings
 @app.route('/job', methods=['GET'])
