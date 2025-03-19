@@ -63,27 +63,30 @@ def get_escrow(id):
         }
     }), 200
 
-# Release Escrow
-@app.route('/api/escrow/<int:id>/release', methods=['PUT'])
-def release_escrow(id):
-    escrow = Escrow.query.get(id)
-    if not escrow or escrow.status != "Pending":
-        return jsonify({"message": "Escrow not found or already processed"}), 400
+# Escrow Status Update
+@app.route('/api/escrow/<int:id>', methods=['PUT'])
+def update_escrow(id):
+    data = request.get_json()
     
-    escrow.status = "Released"
-    db.session.commit()
-    return jsonify({"message": "Escrow released", "escrow_id": escrow.id, "status": escrow.status}), 200
+    if "Status" not in data:
+        return jsonify({"message": "Missing required field: Status"}), 400
 
-# Cancel Escrow
-@app.route('/api/escrow/<int:id>/cancel', methods=['PUT'])
-def cancel_escrow(id):
     escrow = Escrow.query.get(id)
     if not escrow or escrow.status != "Pending":
         return jsonify({"message": "Escrow not found or already processed"}), 400
-    
-    escrow.status = "Cancelled"
+
+    if data["Status"] not in ["Released", "Cancelled"]:
+        return jsonify({"message": "Invalid status. Allowed: 'Released' or 'Cancelled'"}), 400
+
+    # Update escrow status based on the request
+    escrow.status = data["Status"]
     db.session.commit()
-    return jsonify({"message": "Escrow cancelled", "escrow_id": escrow.id, "status": escrow.status}), 200
+
+    return jsonify({
+        "message": f"Escrow {data['Status'].lower()} successfully",
+        "escrow_id": escrow.id,
+        "status": escrow.status
+    }), 200
 
 if __name__ == "__main__":
     with app.app_context():
