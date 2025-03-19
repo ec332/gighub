@@ -9,13 +9,13 @@ import threading
 app = Flask(__name__)
 
 # Database Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://admin:password@localhost:5432/error_logs"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://admin:password@postgres:5432/error_logs"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
 # Kafka Configuration
-KAFKA_BROKER = 'localhost:9092'
+KAFKA_BROKER = 'kafka:9092'
 
 # Kafka Producer (sends error logs)
 producer = KafkaProducer(
