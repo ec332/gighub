@@ -1,0 +1,96 @@
+# services:
+#   zookeeper:
+#     image: wurstmeister/zookeeper
+#     ports:
+#       - "2181:2181"
+#   kafka:
+#     image: wurstmeister/kafka
+#     ports:
+#       - "9092:9092"
+#     environment:
+#       # KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#       # KAFKA_LISTENERS:
+#       #   "INTERNAL://kafka:9090,\
+#       #    EXTERNAL://localhost:9092"
+#       # KAFKA_ADVERTISED_LISTENERS:
+#       #   "INTERNAL://kafka:9090,\
+#       #    EXTERNAL://localhost:9092"
+#       # KAFKA_LISTENER_SECURITY_PROTOCOL_MAP:
+#       #   "INTERNAL:PLAINTEXT,\
+#       #    EXTERNAL:PLAINTEXT"
+#       # KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+#     # environment:
+#       KAFKA_BROKER_ID: 1
+#       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+#       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+#       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#     depends_on:
+#       - zookeeper
+
+  
+#   postgres:
+#     image: postgres:latest
+#     container_name: postgres
+#     restart: always
+#     environment:
+#       - POSTGRES_USER=admin
+#       - POSTGRES_PASSWORD=password
+#       - POSTGRES_DB=error_logs
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:
+
+
+services:
+  error-service:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://admin:password@postgres:5432/error_logs
+      - FLASK_ENV=development
+      - KAFKA_BROKER_URL=localhost:9092  # Kafka broker URL for local machine connection
+    depends_on:
+      - postgres
+      - kafka  # Ensures that Kafka starts before the Flask app
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: error_logs
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistent data storage for PostgreSQL
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"  # Exposing Kafka port for communication
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"  # Exposing Zookeeper port
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+volumes:
+  postgres_data:  # Persistent volume for PostgreSQL data storage
