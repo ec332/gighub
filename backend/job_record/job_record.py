@@ -12,8 +12,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-@app.before_first_request
-def create_tables():
+with app.app_context():
     db.create_all()
 
 class Job(db.Model):
@@ -144,7 +143,7 @@ def get_job(job_id):
     return jsonify({"job": job.json()}), 200
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
 
 
     
