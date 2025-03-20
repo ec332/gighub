@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from openai import OpenAIError
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
