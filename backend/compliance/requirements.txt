@@ -3,3 +3,5 @@ flask_sqlalchemy
 mysql-connector-python
 sqlalchemy
 requests
+python-dotenv
+
