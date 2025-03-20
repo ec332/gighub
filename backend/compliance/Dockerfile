@@ -13,4 +13,4 @@ COPY .env .env
 
 EXPOSE 5002
 
-CMD ["python", "app.py"]
+CMD ["python", "compliance.py"]

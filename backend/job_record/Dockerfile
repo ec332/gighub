@@ -13,4 +13,4 @@ COPY .env .env
 
 EXPOSE 5001
 
-CMD ["python", "app.py"]
+CMD ["python", "job_record.py"]
