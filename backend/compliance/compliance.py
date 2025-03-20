@@ -12,8 +12,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-@app.before_first_request
-def create_tables():
+with app.app_context():
     db.create_all()
 
 @app.errorhandler(500)
@@ -135,5 +134,6 @@ def check_job_compliance(job):
 
 
 if __name__ == '__main__':
-    app.run(port=5002, debug=True)
+    app.run(host="0.0.0.0", port=5002, debug=True)
+
 
