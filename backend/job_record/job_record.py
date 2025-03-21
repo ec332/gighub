@@ -8,12 +8,13 @@ load_dotenv()
 
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root@localhost:3306/gighub'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 with app.app_context():
     db.create_all()
+    print("Tables have been created!")
 
 class Job(db.Model):
     __tablename__ = 'job_records'
@@ -143,7 +144,11 @@ def get_job(job_id):
     return jsonify({"job": job.json()}), 200
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        print("Tables have been created!") 
     app.run(host="0.0.0.0", port=5001, debug=True)
+
 
 
     
