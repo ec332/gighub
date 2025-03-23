@@ -7,9 +7,9 @@ import json
 app = Flask(__name__)
 
 # Update these URLs with actual service endpoints
-JOB_RECORD_UPDATE_URL = "http://localhost:5001/job/{job_id}"
-ESCROW_UPDATE_URL = "http://localhost:5002/api/escrow/{job_id}"
-WALLET_UPDATE_URL = "http://localhost:5000/wallet/{freelancer_id}"
+JOB_RECORD_UPDATE_URL = "http://localhost:5100/job/{job_id}"
+ESCROW_UPDATE_URL = "http://localhost:5200/api/escrow/{job_id}"
+WALLET_UPDATE_URL = "http://localhost:5300/wallet/{freelancer_id}"
 
 # AMQP Configuration (Update this with actual credentials)
 AMQP_URL = "amqp://guest:guest@localhost:5672/"
@@ -86,8 +86,7 @@ def create_task():
     except requests.exceptions.RequestException as e:    
     # Send error to your Flask error logging service
         log_error_to_kafka(str(e), topic="approve-job-errors")
-        return jsonify({"error": "Failed to update job record", "details": error_message}), 500
-
+        return jsonify({"error": "Failed to update job record", "details": str(e)}), 500
 
 
     # Step 2: Call Escrow Microservice to release funds

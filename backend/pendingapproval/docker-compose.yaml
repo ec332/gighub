@@ -21,4 +21,4 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:password@db:5432/jobs_db
     ports:
-      - "5000:5000"
+      - "5500:5000"

@@ -15,7 +15,7 @@ ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
 # Expose the port the app will run on
-EXPOSE 8080
+EXPOSE 5300
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "wallet:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wallet:app"]

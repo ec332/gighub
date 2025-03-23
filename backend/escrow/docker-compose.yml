@@ -4,7 +4,7 @@ services:
   escrow-service:
     build: .
     ports:
-      - "8000:5000"
+      - "5200:5000"
     environment:
       - DATABASE_URL=postgresql://escrow_user:escrow_pass@db:5432/escrow_db
       - FLASK_ENV=development
@@ -18,7 +18,7 @@ services:
       - POSTGRES_PASSWORD=escrow_pass
       - POSTGRES_DB=escrow_db
     ports:
-      - "5432:5432"
+      - "5433:5433"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
