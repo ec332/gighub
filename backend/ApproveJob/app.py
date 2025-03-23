@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from kafka import KafkaProducer
 import requests
 import pika
 import json
@@ -6,14 +7,32 @@ import json
 app = Flask(__name__)
 
 # Update these URLs with actual service endpoints
-JOB_RECORD_UPDATE_URL = "http://localhost:5000/job/{job_id}"
-ESCROW_UPDATE_URL = "http://localhost:5000/escrow/{job_id}"
+JOB_RECORD_UPDATE_URL = "http://localhost:5001/job/{job_id}"
+ESCROW_UPDATE_URL = "http://localhost:5002/api/escrow/{job_id}"
 WALLET_UPDATE_URL = "http://localhost:5000/wallet/{freelancer_id}"
 
 # AMQP Configuration (Update this with actual credentials)
 AMQP_URL = "amqp://guest:guest@localhost:5672/"
 EXCHANGE_NAME = "user-payment-exchange"
 ROUTING_KEY = "user*-payment-notifications"
+
+# Kafka Configuration
+KAFKA_BROKER = 'localhost:29092'
+
+# Kafka Producer (sends error logs)
+producer = KafkaProducer(
+    bootstrap_servers=KAFKA_BROKER,
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
+
+def log_error_to_kafka(error_message, topic="error-logs"):
+    """ Send errors to Kafka for logging """
+    try:
+        producer.send(topic, {"error_message": error_message})
+        producer.flush()  # Ensure the message is sent
+    except Exception as e:
+        print(f"Failed to send error to Kafka: {str(e)}")
+
 
 def send_payment_notification(freelancer_id, amount):
     """ Sends a payment notification to the AMQP server """
@@ -59,26 +78,26 @@ def create_task():
     freelancer_id = data["FreelancerID"]
     amount = data["Price"]
 
-    # Step 1: Update Job Record Status to 'Pending'
-    job_update_payload = {"ID": job_id, "Status": "Pending"}
+    # Step 1: Update Job Record Status to 'completed'
+    job_update_payload = {"job_id": job_id, "status": "completed"}
     try:
         job_update_response = requests.put(JOB_RECORD_UPDATE_URL.format(job_id=job_id), json=job_update_payload)
         job_update_response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-         # TODO: Update Kafka Error Handler
+    except requests.exceptions.RequestException as e:    
+    # Send error to your Flask error logging service
+        log_error_to_kafka(str(e), topic="approve-job-errors")
+        return jsonify({"error": "Failed to update job record", "details": error_message}), 500
 
 
-        return jsonify({"error": "Failed to update job status", "details": str(e)}), 500
 
     # Step 2: Call Escrow Microservice to release funds
-    escrow_update_payload = {"Status": "Released"}
+    escrow_update_payload = {"status": "released"}
     try:
         escrow_response = requests.put(ESCROW_UPDATE_URL.format(job_id=job_id), json=escrow_update_payload)
         escrow_response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-         # TODO: Update Kafka Error Handler
-
-
+    except requests.exceptions.RequestException as e:    
+    # Send error to your Flask error logging service
+        log_error_to_kafka(str(e), topic="approve-job-errors")
         return jsonify({"error": "Failed to update escrow status", "details": str(e)}), 500
 
     # Step 3: Transfer funds to freelancer's wallet
@@ -86,19 +105,17 @@ def create_task():
     try:
         wallet_response = requests.post(WALLET_UPDATE_URL.format(freelancer_id=freelancer_id), json=wallet_update_payload)
         wallet_response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-         # TODO: Update Kafka Error Handler
-
-
+    except requests.exceptions.RequestException as e:    
+    # Send error to your Flask error logging service
+        log_error_to_kafka(str(e), topic="approve-job-errors")
         return jsonify({"error": "Failed to transfer funds to wallet", "details": str(e)}), 500
 
     # Step 4: Send AMQP Notification
     try:
         send_payment_notification(freelancer_id, amount)
     except Exception as e:
-         # TODO: Update Kafka Error Handler
-
-         
+    # Send error to your Flask error logging service
+        log_error_to_kafka(str(e), topic="approve-job-errors")
         return jsonify({"error": "Payment processed, but failed to send notification", "details": str(e)}), 500
 
     return jsonify({"message": "Task created, status updated to Pending, escrow released, payment processed, and notification sent"}), 201

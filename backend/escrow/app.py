@@ -68,22 +68,22 @@ def get_escrow(id):
 def update_escrow(id):
     data = request.get_json()
     
-    if "Status" not in data:
-        return jsonify({"message": "Missing required field: Status"}), 400
+    if "status" not in data:
+        return jsonify({"message": "Missing required field: status"}), 400
 
     escrow = Escrow.query.get(id)
-    if not escrow or escrow.status != "Pending":
+    if not escrow or escrow.status != "pending":
         return jsonify({"message": "Escrow not found or already processed"}), 400
 
-    if data["Status"] not in ["Released", "Cancelled"]:
-        return jsonify({"message": "Invalid status. Allowed: 'Released' or 'Cancelled'"}), 400
+    if data["status"] not in ["released", "cancelled"]:
+        return jsonify({"message": "Invalid status. Allowed: 'released' or 'cancelled'"}), 400
 
     # Update escrow status based on the request
-    escrow.status = data["Status"]
+    escrow.status = data["status"]
     db.session.commit()
 
     return jsonify({
-        "message": f"Escrow {data['Status'].lower()} successfully",
+        "message": f"Escrow {data['status'].lower()} successfully",
         "escrow_id": escrow.id,
         "status": escrow.status
     }), 200

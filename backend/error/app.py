@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from kafka import KafkaConsumer, KafkaProducer
+from kafka import KafkaConsumer
 from datetime import datetime
 import json
 import os
@@ -17,37 +17,16 @@ db = SQLAlchemy(app)
 # Kafka Configuration
 KAFKA_BROKER = 'kafka:9092'
 
-# Kafka Producer (sends error logs)
-producer = KafkaProducer(
-    bootstrap_servers=KAFKA_BROKER,
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
-)
-
 # ErrorLog Model
 class ErrorLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     topic = db.Column(db.String(50), nullable=False)
-    message = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Create DB Tables
 with app.app_context():
     db.create_all()
-
-# Send Error to Kafka
-@app.route('/api/errors', methods=['POST'])
-def send_error():
-    data = request.get_json()
-    topic = data.get("topic")
-    error_message = data.get("error_message")
-
-    if not topic or not error_message:
-        return jsonify({"message": "Missing topic or error_message"}), 400
-
-    producer.send(topic, {"error_message": error_message})
-    producer.flush()
-
-    return jsonify({"message": f"Error sent to {topic}"}), 201
 
 # Retrieve Stored Errors from PostgreSQL
 @app.route('/api/errors', methods=['GET'])
