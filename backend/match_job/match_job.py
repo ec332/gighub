@@ -11,13 +11,21 @@ CORS(app)  # Enable CORS
 # Configuration for external services
 FREELANCER_SERVICE_URL = os.getenv('FREELANCER_SERVICE_URL', 'http://localhost:5001/freelancer')
 JOB_SERVICE_URL = os.getenv('JOB_SERVICE_URL', 'http://localhost:5002/job')
-KAFKA_BROKER = os.getenv('KAFKA_BROKER', 'kafka:9092')
+KAFKA_BROKER = os.getenv('KAFKA_BROKER', 'localhost:29092')
 
 # Kafka Producer setup
 producer = KafkaProducer(
     bootstrap_servers=KAFKA_BROKER,
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
+
+def log_error_to_kafka(error_message, topic="error-logs"):
+    """ Send errors to Kafka for logging """
+    try:
+        producer.send(topic, {"error_message": error_message})
+        producer.flush()  # Ensure the message is sent
+    except Exception as e:
+        print(f"Failed to send error to Kafka: {error_message}")
 
 @app.route('/matchjob', methods=['POST'])
 def match_job():
@@ -40,7 +48,6 @@ def match_job():
             return jsonify({"message": "No skills found for freelancer."}), 200
 
         print("Invoking job microservice to fetch matching job listings")
-        
         # Correct GET request with query parameters
         job_response = requests.post(f'{JOB_SERVICE_URL}/skills', json={'skills': skills})
         job_response.raise_for_status()
@@ -53,17 +60,11 @@ def match_job():
     except Exception as e:
         error_message = str(e)
         topic = 'match-job-errors'
+        log_error_to_kafka(error_message, topic)
         print(f"Error occurred: {error_message} - Sending to Kafka topic: {topic}")
 
+        
         # Send the error to Kafka with exception handling
-        try:
-            producer.send(topic, {"error_message": error_message})
-            producer.flush()
-            print("Error sent to error handling service successfully")
-        except Exception as kafka_error:
-            print(f"Kafka Error: {str(kafka_error)}")
-
-        return jsonify({'error': 'An error occurred while matching jobs', 'details': error_message}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))

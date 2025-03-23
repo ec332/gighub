@@ -15,7 +15,7 @@ ESCROW_SERVICE_URL = os.getenv('ESCROW_SERVICE_URL', 'http://localhost:5005/api/
 JOB_SERVICE_URL = os.getenv('JOB_SERVICE_URL', 'http://localhost:5002/job')
 
 AMQP_URL = os.getenv('AMQP_URL', 'amqp://guest:guest@localhost:5672/')
-KAFKA_BROKER = os.getenv('KAFKA_BROKER', 'kafka:9092')
+KAFKA_BROKER = os.getenv('KAFKA_BROKER', 'localhost:29092')
 
 # AMQP setup
 connection = pika.BlockingConnection(pika.URLParameters(AMQP_URL))
@@ -27,6 +27,14 @@ producer = KafkaProducer(
     bootstrap_servers=KAFKA_BROKER,
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
+
+def log_error_to_kafka(error_message, topic="error-logs"):
+    """ Send errors to Kafka for logging """
+    try:
+        producer.send(topic, {"error_message": error_message})
+        producer.flush()  # Ensure the message is sent
+    except Exception as e:
+        print(f"Failed to send error to Kafka: {error_message}")
 
 @app.route('/acceptjob', methods=['POST'])
 def accept_job():
@@ -85,15 +93,9 @@ def accept_job():
         print(f"Notification sent to RabbitMQ, details: {notification_message}")
     except Exception as e:
         error_message = str(e)
-        
         topic='accept-job-errors'
+        log_error_to_kafka(error_message, topic)
         print(f"Error occurred: {error_message} - Invoking error microservice with topic: {topic}")
-        
-        producer.send(topic, {"error_message": error_message})
-        producer.flush()
-        print("Error sent to error handling service")
-
-        return jsonify({'error': 'An error occurred while accepting the job', 'details': error_message}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
