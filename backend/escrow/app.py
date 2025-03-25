@@ -44,7 +44,7 @@ def create_escrow():
     return jsonify({"message": "Escrow created", "escrow_id": new_escrow.id, "status": new_escrow.status}), 201
 
 # Retrieve Escrow
-@app.route('/api/escrow/<int:id>', methods=['GET'])
+@app.route('/escrow/<int:id>', methods=['GET'])
 def get_escrow(id):
     escrow = Escrow.query.get(id)
     if not escrow:
@@ -64,7 +64,7 @@ def get_escrow(id):
     }), 200
 
 # Escrow Status Update
-@app.route('/api/escrow/<int:id>', methods=['PUT'])
+@app.route('/escrow/<int:id>', methods=['PUT'])
 def update_escrow(id):
     data = request.get_json()
     

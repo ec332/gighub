@@ -47,7 +47,13 @@ def add_job():
 
 @app.route('/jobs', methods=['GET'])
 def get_jobs():
-    jobs = Job.query.all()
+    employer_id = request.args.get('employerId')
+    if employer_id:
+        jobs = Job.query.filter_by(employer_id=employer_id).all()
+    else:
+        #TODO: Remove before deployment
+        jobs = Job.query.all()
+
     job_list = [{"jobId": job.job_id, "employerId": job.employer_id} for job in jobs]
     return jsonify(job_list)
 
