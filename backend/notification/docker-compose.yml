@@ -7,16 +7,12 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-  postgres:
-    image: "postgres"
-    container_name: postgres
-    restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: notifications
-    ports:
-      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
 
   notification-service:
     build: .
@@ -24,9 +20,8 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/notifications
       - FLASK_ENV=development
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
-      - postgres
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy

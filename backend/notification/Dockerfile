@@ -5,15 +5,13 @@ FROM python:3.11
 WORKDIR /app
 
 # Copy the current directory contents into the container
-COPY . /app
 
 # Install dependencies
 RUN pip install --no-cache-dir \
     flask \
-    flask_sqlalchemy \
-    psycopg2-binary \
     pika
 
+COPY . .
 # Expose the port the app runs on
 EXPOSE 5000
 
