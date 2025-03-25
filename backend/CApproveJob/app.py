@@ -95,36 +95,36 @@ def create_task():
     freelancer_id = data["FreelancerID"]
     amount = data["Price"]
 
-    # # Step 1: Update Job Record Status to 'completed'
-    # job_update_payload = {"job_id": job_id, "status": "completed"}
-    # try:
-    #     job_update_response = requests.put(JOB_RECORD_UPDATE_URL.format(job_id=job_id), json=job_update_payload)
-    #     job_update_response.raise_for_status()
-    # except requests.exceptions.RequestException as e:    
-    # # Send error to your Flask error logging service
-    #     log_error_to_kafka(str(e), topic="approve-job-errors")
-    #     return jsonify({"error": "Failed to update job record", "details": str(e)}), 500
+    # Step 1: Update Job Record Status to 'completed'
+    job_update_payload = {"job_id": job_id, "status": "completed"}
+    try:
+        job_update_response = requests.put(JOB_RECORD_UPDATE_URL.format(job_id=job_id), json=job_update_payload)
+        job_update_response.raise_for_status()
+    except requests.exceptions.RequestException as e:    
+    # Send error to your Flask error logging service
+        log_error_to_kafka(str(e), topic="approve-job-errors")
+        return jsonify({"error": "Failed to update job record", "details": str(e)}), 500
 
 
-    # # Step 2: Call Escrow Microservice to release funds
-    # escrow_update_payload = {"status": "released"}
-    # try:
-    #     escrow_response = requests.put(ESCROW_UPDATE_URL.format(job_id=job_id), json=escrow_update_payload)
-    #     escrow_response.raise_for_status()
-    # except requests.exceptions.RequestException as e:    
-    # # Send error to your Flask error logging service
-    #     log_error_to_kafka(str(e), topic="approve-job-errors")
-    #     return jsonify({"error": "Failed to update escrow status", "details": str(e)}), 500
+    # Step 2: Call Escrow Microservice to release funds
+    escrow_update_payload = {"status": "released"}
+    try:
+        escrow_response = requests.put(ESCROW_UPDATE_URL.format(job_id=job_id), json=escrow_update_payload)
+        escrow_response.raise_for_status()
+    except requests.exceptions.RequestException as e:    
+    # Send error to your Flask error logging service
+        log_error_to_kafka(str(e), topic="approve-job-errors")
+        return jsonify({"error": "Failed to update escrow status", "details": str(e)}), 500
 
-    # # Step 3: Transfer funds to freelancer's wallet
-    # wallet_update_payload = {"amount": amount}
-    # try:
-    #     wallet_response = requests.post(WALLET_UPDATE_URL.format(freelancer_id=freelancer_id), json=wallet_update_payload)
-    #     wallet_response.raise_for_status()
-    # except requests.exceptions.RequestException as e:    
-    # # Send error to your Flask error logging service
-    #     log_error_to_kafka(str(e), topic="approve-job-errors")
-    #     return jsonify({"error": "Failed to transfer funds to wallet", "details": str(e)}), 500
+    # Step 3: Transfer funds to freelancer's wallet
+    wallet_update_payload = {"amount": amount}
+    try:
+        wallet_response = requests.post(WALLET_UPDATE_URL.format(freelancer_id=freelancer_id), json=wallet_update_payload)
+        wallet_response.raise_for_status()
+    except requests.exceptions.RequestException as e:    
+    # Send error to your Flask error logging service
+        log_error_to_kafka(str(e), topic="approve-job-errors")
+        return jsonify({"error": "Failed to transfer funds to wallet", "details": str(e)}), 500
 
     # Step 4: Send AMQP Notification
     try:

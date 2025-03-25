@@ -12,8 +12,7 @@ CREATE_PENDING_APPROVAL_URL = "http://localhost:5500/jobs"
 
 # AMQP Configuration (Update this with actual credentials)
 AMQP_URL = "amqp://guest:guest@localhost:5672/"
-EXCHANGE_NAME = "user-payment-exchange"
-ROUTING_KEY = "user*-payment-notifications"
+EXCHANGE_NAME = "user-job-completion-notifications"
 
 # Kafka Configuration
 KAFKA_BROKER = 'localhost:29092'
@@ -43,19 +42,37 @@ def send_job_complete_notification(employer_id, job_id):
         # Ensure the exchange exists (topic type)
         channel.exchange_declare(exchange=EXCHANGE_NAME, exchange_type="topic", durable=True)
 
+        # Define dynamic routing key and queue name
+        routing_key = f"{employer_id}-job-completion-notification"
+        queue_name = routing_key  # Queue name matches the routing key
+
+        # Ensure the queue exists
+        channel.queue_declare(queue=queue_name, durable=True)
+
+        # Bind queue to exchange
+        channel.queue_bind(exchange=EXCHANGE_NAME, queue=queue_name, routing_key=routing_key)
+
         # Prepare the message
         message = {
-            "employer_id": employer_id,
+            "freelancer_id": employer_id,
             "job_id": job_id,
-            "message": f"${job_id} has been completed!"
+            "message": "Job has been completed"
         }
         message_body = json.dumps(message)
 
         # Publish message to the exchange with the routing key
-        channel.basic_publish(exchange=EXCHANGE_NAME, routing_key=ROUTING_KEY, body=message_body)
+        channel.basic_publish(
+            exchange=EXCHANGE_NAME,
+            routing_key=routing_key,
+            body=message_body,
+            properties=pika.BasicProperties(
+                delivery_mode=2 
+            )
+        )
 
         # Close the connection
         connection.close()
+        print(f"Notification sent: {message} to queue {queue_name}")
 
     except Exception as e:
         print(f"Failed to send AMQP notification: {str(e)}")
