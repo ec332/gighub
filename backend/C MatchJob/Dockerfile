@@ -10,13 +10,14 @@ COPY . /app
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port the app runs on
-EXPOSE 5000
+# Expose the correct port
+EXPOSE 6100
 
 # Set environment variables
-ENV FREELANCER_SERVICE_URL=http://localhost:5001/freelancer
-ENV JOB_SERVICE_URL=http://localhost:5002/job
-ENV KAFKA_BROKER=kafka:9092
+ENV FREELANCER_SERVICE_URL=https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer
+ENV JOB_SERVICE_URL=http://localhost:5100/job
+ENV KAFKA_BROKER=localhost:29092
+ENV PORT=6100
 
-# Run the application
+# Run the application on port 6100
 CMD ["python", "match_job.py"]
