@@ -49,6 +49,12 @@ class Job(db.Model):
         "status": self.status
     }
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
+    print("Tables have been created!")
+
+
 @app.errorhandler(500)
 def internal_server_error(error):
     return jsonify({"error": "Internal server error"}), 500
