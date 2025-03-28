@@ -1,20 +1,21 @@
-FROM python:3.9
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
 
-ENV PYTHONUNBUFFERED=1
-
+# Set the working directory in the container
 WORKDIR /app
 
-RUN apt update && apt install -y default-mysql-client
-RUN apt update && apt install -y curl
-
-COPY requirements.txt requirements.txt
+# Install dependencies
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-EXPOSE 5001
+# Set environment variable to tell Flask to run in development mode
+ENV FLASK_ENV=development
 
-ENV FLASK_APP=job_record.py
-ENV FLASK_RUN_HOST=0.0.0.0
+# Make port 5100 available to the world outside this container
+EXPOSE 5100
 
-CMD ["python", "job_record.py"]
+# Define the command to run your app using gunicorn
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]

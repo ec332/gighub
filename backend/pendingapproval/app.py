@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import os
 
 app = Flask(__name__)
@@ -28,15 +29,31 @@ def add_job():
     if not employer_id or not job_id:
         return jsonify({"error": "Missing employerId or jobId"}), 400
 
-    new_job = Job(job_id=job_id, employer_id=employer_id)
-    db.session.add(new_job)
-    db.session.commit()
+    try:
+        new_job = Job(job_id=job_id, employer_id=employer_id)
+        db.session.add(new_job)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": f"A job with job_id {job_id} already exists."}), 409
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
     return jsonify({"message": "Job added successfully!"}), 201
 
 @app.route('/jobs', methods=['GET'])
 def get_jobs():
-    jobs = Job.query.all()
+    employer_id = request.args.get('employerId')
+    if employer_id:
+        jobs = Job.query.filter_by(employer_id=employer_id).all()
+    else:
+        #TODO: Remove before deployment
+        jobs = Job.query.all()
+
     job_list = [{"jobId": job.job_id, "employerId": job.employer_id} for job in jobs]
     return jsonify(job_list)
 

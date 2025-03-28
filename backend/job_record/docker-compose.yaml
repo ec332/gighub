@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  flask-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask-app
+    ports:
+      - "5100:5000"
+    environment:
+      - FLASK_APP=job_record.py
+      - FLASK_RUN_HOST=0.0.0.0
+      - SQLALCHEMY_DATABASE_URI=mysql+mysqlconnector://root:rootpassword@gighub-db:3306/gighub
+    volumes:
+      - .:/app
+    depends_on:
+      - gighub-db
+    networks:
+      - gighub-network
+
+  gighub-db:
+    image: mysql:8.0
+    container_name: gighub-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gighub
+    ports:
+      - "3306:3306"
+    volumes:
+      - gighub-db-data:/var/lib/mysql
+    networks:
+      - gighub-network
+
+networks:
+  gighub-network:
+    driver: bridge
+
+volumes:
+  gighub-db-data:

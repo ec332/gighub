@@ -1,44 +1,105 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import ProfileForm from '@/app/components/ProfileForm';
+import Link from 'next/link';
 
-export default function CreateEmployeeProfile() {
-  const { data: session, status } = useSession();
+export default function SignIn() {
   const router = useRouter();
+  const [userType, setUserType] = useState('freelancer');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
-    } else if (session?.user?.userType !== 'freelancer') {
-      router.push('/employer/dashboard');
-    }
-  }, [session, status, router]);
-
-  const handleSubmit = async (data: any) => {
-    // Here you would typically make an API call to save the profile
-    console.log('Employee Profile Data:', data);
-    // For demo purposes, we'll just simulate a delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  const checkFreelancerProfile = async (email: string) => {
+    const res = await fetch(`https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/${email}`);
+    return res.ok;
   };
 
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const result = await signIn('credentials', {
+      email,
+      password,
+      userType,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError('Login failed. Please check your credentials.');
+    } else {
+      // Custom redirect logic after login
+      if (userType === 'freelancer') {
+        const exists = await checkFreelancerProfile(email);
+        router.push(exists ? '/freelancer/dashboard' : '/freelancer/create-profile');
+      } else {
+        router.push('/employer/dashboard');
+      }
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create Employee Profile</h1>
-          <p className="mt-2 text-gray-600">
-            Complete your profile to start finding job opportunities.
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+        <div>
+          <h2 className="text-center text-3xl font-bold text-gray-900">Sign in to your account</h2>
         </div>
-        <ProfileForm userType="freelancer" onSubmit={handleSubmit} />
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">User Type</label>
+              <select
+                value={userType}
+                onChange={(e) => setUserType(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              >
+                <option value="freelancer">Freelancer</option>
+                <option value="employer">Employer</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2"
+              />
+            </div>
+          </div>
+
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 rounded-md text-sm font-semibold text-white bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200"
+          >
+            Sign in
+          </button>
+
+          <p className="text-sm text-center text-gray-600">
+            Don&apos;t have an account?{' '}
+            <Link href="/auth/signup" className="text-[#1860F1] hover:text-[#BBEF5D] font-medium">
+              Sign up
+            </Link>
+          </p>
+        </form>
       </div>
     </div>
   );
-} 
+}
+
+

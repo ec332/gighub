@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  wallet-service:
+    build: .
+    ports:
+      - "5300:5000" 
+    environment:
+      FLASK_APP: wallet.py
+      FLASK_ENV: production
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - .:/app 
+    command: ["gunicorn", "--bind", "0.0.0.0:5000", "wallet:app"]

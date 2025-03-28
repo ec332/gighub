@@ -7,14 +7,13 @@ import json
 app = Flask(__name__)
 
 # Update these URLs with actual service endpoints
-JOB_RECORD_UPDATE_URL = "http://localhost:5001/job/{job_id}"
-ESCROW_UPDATE_URL = "http://localhost:5002/api/escrow/{job_id}"
-WALLET_UPDATE_URL = "http://localhost:5000/wallet/{freelancer_id}"
+JOB_RECORD_UPDATE_URL = "http://localhost:5100/job/{job_id}"
+ESCROW_UPDATE_URL = "http://localhost:5200/escrow/{job_id}"
+WALLET_UPDATE_URL = "http://localhost:5300/wallet/{freelancer_id}"
 
 # AMQP Configuration (Update this with actual credentials)
 AMQP_URL = "amqp://guest:guest@localhost:5672/"
-EXCHANGE_NAME = "user-payment-exchange"
-ROUTING_KEY = "user*-payment-notifications"
+EXCHANGE_NAME = "user-job-accept-notifications"
 
 # Kafka Configuration
 KAFKA_BROKER = 'localhost:29092'
@@ -35,7 +34,7 @@ def log_error_to_kafka(error_message, topic="error-logs"):
 
 
 def send_payment_notification(freelancer_id, amount):
-    """ Sends a payment notification to the AMQP server """
+    """ Sends a payment notification to the AMQP server and ensures the queue exists """
     try:
         # Connect to RabbitMQ
         params = pika.URLParameters(AMQP_URL)
@@ -44,6 +43,16 @@ def send_payment_notification(freelancer_id, amount):
 
         # Ensure the exchange exists (topic type)
         channel.exchange_declare(exchange=EXCHANGE_NAME, exchange_type="topic", durable=True)
+
+        # Define dynamic routing key and queue name
+        routing_key = f"{freelancer_id}-job-accept-notification"
+        queue_name = routing_key  # Queue name matches the routing key
+
+        # Ensure the queue exists
+        channel.queue_declare(queue=queue_name, durable=True)
+
+        # Bind queue to exchange
+        channel.queue_bind(exchange=EXCHANGE_NAME, queue=queue_name, routing_key=routing_key)
 
         # Prepare the message
         message = {
@@ -54,10 +63,18 @@ def send_payment_notification(freelancer_id, amount):
         message_body = json.dumps(message)
 
         # Publish message to the exchange with the routing key
-        channel.basic_publish(exchange=EXCHANGE_NAME, routing_key=ROUTING_KEY, body=message_body)
+        channel.basic_publish(
+            exchange=EXCHANGE_NAME,
+            routing_key=routing_key,
+            body=message_body,
+            properties=pika.BasicProperties(
+                delivery_mode=2 
+            )
+        )
 
         # Close the connection
         connection.close()
+        print(f"Notification sent: {message} to queue {queue_name}")
 
     except Exception as e:
         print(f"Failed to send AMQP notification: {str(e)}")
@@ -86,8 +103,7 @@ def create_task():
     except requests.exceptions.RequestException as e:    
     # Send error to your Flask error logging service
         log_error_to_kafka(str(e), topic="approve-job-errors")
-        return jsonify({"error": "Failed to update job record", "details": error_message}), 500
-
+        return jsonify({"error": "Failed to update job record", "details": str(e)}), 500
 
 
     # Step 2: Call Escrow Microservice to release funds
