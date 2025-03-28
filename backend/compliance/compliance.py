@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-import requests
 import os
 from dotenv import load_dotenv
 
@@ -23,7 +22,7 @@ class Compliance(db.Model):
     __tablename__ = 'compliance'
 
     id = db.Column('ID', db.Integer, primary_key=True, autoincrement=True)
-    job_id = db.Column('JobID', db.Integer, nullable=False, unique=True)
+    job_id = db.Column('JobID', db.Integer, nullable=False, unique=False)
     is_compliant = db.Column('IsCompliant', db.Boolean, default=False)
     checked_at = db.Column('CheckedAt', db.DateTime, default=db.func.current_timestamp())
     remarks = db.Column('Remarks', db.Text, nullable=True)
@@ -38,41 +37,21 @@ class Compliance(db.Model):
             "id": self.id,
             "job_id": self.job_id,
             "is_compliant": self.is_compliant,
-            "checked_at": self.checked_at.strftime('%Y-%m-%d %H:%M:%S') if self.checked_at else None,
+            "checked_at": datetime.now(),
             "remarks": self.remarks
         }
-    
-# Microservice base URL (replace with actual URL)
-PUBLISH_JOB_LISTING = ""
-
-# job_data should be 
-# {
-#     "job": {
-#         "id": 1,
-#         "title": "Software Engineer",
-#         "description": "Develop and maintain backend services.",
-#         "category": "IT",
-#         "price": 5000,
-#         "skills": "Python, Flask, SQL"
-#     }
-# }
 
 @app.route('/compliance/<int:job_id>', methods=['POST'])
 def submit_compliance_check(job_id):
-
-    publish_job_url = f"{PUBLISH_JOB_LISTING}{job_id}"
-    job_response = requests.get(publish_job_url)
-
-    if job_response.status_code == 404:
-        return jsonify({"error": "Job not found"}), 404
-
-    if job_response.status_code != 200:
-        return jsonify({"error": "Failed to retrieve job details"}), 500
-
-    job_data = job_response.json().get("job")
+    # Get job data directly from the POST request
+    job_data = request.json.get("job")
 
     if not job_data:
-        return jsonify({"error": "Invalid job data from microservice"}), 500
+        return jsonify({"error": "Invalid job data in request"}), 400
+
+    # Ensure the job_id in the URL matches the job_id in the payload
+    if job_data.get("id") != job_id:
+        return jsonify({"error": "Job ID in URL does not match job ID in payload"}), 400
 
     is_compliant, remarks = check_job_compliance(job_data)
 
@@ -109,13 +88,13 @@ def check_job_compliance(job):
         remarks.append("Title is missing.")
         is_compliant = False
 
-    # Rule 2: Description must be at least 50 characters
-    if not job.get("description") or len(job["description"].strip()) < 50:
-        remarks.append("Description must be at least 50 characters.")
-        is_compliant = False
+    # # Rule 2: Description must be at least 50 characters
+    # if not job.get("description") or len(job["description"].strip()) < 50:
+    #     remarks.append("Description must be at least 50 characters.")
+    #     is_compliant = False
 
     # Rule 3: Category must be valid
-    valid_categories = {"IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering"}
+    valid_categories = {"IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering","Retail","F&B","Logistics"}
     if not job.get("category") or job["category"] not in valid_categories:
         remarks.append(f"Invalid category. Must be one of {valid_categories}.")
         is_compliant = False
@@ -131,7 +110,6 @@ def check_job_compliance(job):
         is_compliant = False
 
     return is_compliant, ", ".join(remarks) if remarks else "Job is compliant."
-
 
 if __name__ == '__main__':
     with app.app_context():

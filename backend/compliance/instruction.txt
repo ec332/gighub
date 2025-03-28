@@ -1,0 +1,8 @@
+docker network create gighub-network
+
+docker run --name gighub-db -e MYSQL_ROOT_PASSWORD=rootpassword -e MYSQL_DATABASE=gighub -p 3307:3306 --network=gighub-network -d mysql:8.0
+
+docker build -t gighub-compliance .
+
+docker run -p 5002:5002 --env-file .env --network=gighub-network --name gighub-compliance gighub-compliance
+
