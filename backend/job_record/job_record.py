@@ -54,28 +54,33 @@ def internal_server_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 # create new job listing (scenario 1: publish job list)
-@app.route('/job', methods=['POST']) 
+@app.route('/job', methods=['POST'])
 def create_job():
-    data = request.json
-    if not data or 'employer_id' not in data or 'title' not in data:
-        return jsonify({"error": "Invalid job data"}), 400
-    
-    skills_str = ", ".join(data.get('skills', [])) if isinstance(data.get('skills'), list) else None
+    try:
+        data = request.json
+        if not data or 'employer_id' not in data or 'title' not in data:
+            return jsonify({"error": "Invalid job data"}), 400
 
-    new_job = Job(
-        employer_id=data['employer_id'],
-        freelancer_id=data.get('freelancer_id'),
-        title=data['title'],
-        description=data.get('description'),
-        category=data.get('category'),
-        skills=skills_str,
-        price=data.get('price'),
-        status=data.get('status', 'hiring')
-    )
+        skills_str = ", ".join(data.get('skills', [])) if isinstance(data.get('skills'), list) else None
 
-    db.session.add(new_job)
-    db.session.commit()
-    return jsonify({"message": "Job recorded successfully", "job": new_job.json()}), 201
+        new_job = Job(
+            employer_id=data['employer_id'],
+            freelancer_id=data.get('freelancer_id'),
+            title=data['title'],
+            description=data.get('description'),
+            category=data.get('category'),
+            skills=skills_str,
+            price=data.get('price'),
+            status=data.get('status', 'hiring')
+        )
+
+        db.session.add(new_job)
+        db.session.commit()
+
+        return jsonify({"message": "Job recorded successfully", "job": new_job.json()}), 201
+
+    except Exception as e:
+        return jsonify({"error": "Error while creating job", "details": str(e)}), 500
 
 # view matching job listings according to skills (scenario2: match job)
 @app.route('/jobs/skills', methods=['GET'])
