@@ -5,12 +5,16 @@ from sqlalchemy import or_
 from dotenv import load_dotenv
 
 load_dotenv()
+os.environ["FLASK_RUN_PORT"] = "5100"
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:rootpassword@gighub-db:3306/gighub'
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:rootpassword@gighub-db:3306/gighub'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+with app.app_context():
+    db.create_all()
 
 class Job(db.Model):
     __tablename__ = 'job_records'
@@ -148,7 +152,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         print("Tables have been created!") 
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5100, debug=True)
 
 
 
