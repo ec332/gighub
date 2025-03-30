@@ -87,7 +87,7 @@ def create_job():
         return jsonify({"error": "Error while creating job", "details": str(e)}), 500
 
 # view matching job listings according to skills (scenario2: match job)
-@app.route('/jobs/skills', methods=['GET'])
+@app.route('/job/skills', methods=['GET'])
 def get_jobs_by_skills():
     data = request.json
 
