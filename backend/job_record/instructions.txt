@@ -1,0 +1,13 @@
+docker network create gighub-network
+docker run --name gighub-db -e MYSQL_ROOT_PASSWORD=rootpassword -e MYSQL_DATABASE=gighub -p 3306:3306 --network=gighub-network -d mysql:8.0
+docker build -t flask-job-record .
+docker run -p 5100:5100 --env-file .env --network=gighub-network --name flask-job-record flask-job-record
+
+http://localhost:5100/job
+
+INSERT INTO BODY
+{
+  "title": "Software Engineer",
+  "category": "IT",
+  "skills": ["Python", "JavaScript", "SQL"]
+}

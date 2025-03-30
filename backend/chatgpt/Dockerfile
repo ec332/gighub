@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the port the app runs on
-EXPOSE 5004
+EXPOSE 5400
 
 # Command to run the application
 CMD ["python", "chatgpt_wrapper.py"]
