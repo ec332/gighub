@@ -61,7 +61,7 @@ def internal_server_error(error):
 @app.route('/job', methods=['POST'])
 def create_job():
     try:
-        data = request.json
+        data = request.json['job']
         if not data or 'employer_id' not in data or 'title' not in data:
             return jsonify({"error": "Invalid job data"}), 400
 
