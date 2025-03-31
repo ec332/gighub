@@ -1,39 +1,11 @@
 version: '3.8'
 
 services:
-  # RabbitMQ service
-  #rabbitmq:
-  #  image: rabbitmq:3-management
-  #  container_name: rabbitmq
-  #  ports:
-  #    - "5672:5672"  # AMQP port
-  #    - "15672:15672"  # Management UI
-  #  environment:
-  #    RABBITMQ_DEFAULT_USER: guest
-  #    RABBITMQ_DEFAULT_PASS: guest
-
-  # Kafka service
-  
-
-  # Accept Job microservice
-  accept_job:
-    build:
-      context: .
-    container_name: accept_job
+  accept-job-service:
+    build: .
+    container_name: accept-job-container
     ports:
-      - "6000:6000"
+      - "6000:5000"  # Map container port 6000 to host port 6000
     environment:
-      JOB_SERVICE_URL: http://localhost:5100/job
-      ESCROW_SERVICE_URL: http://localhost:5200/api/escrow
-      WALLET_SERVICE_URL: http://localhost:5300/wallet
-      NOTIFICATION_SERVICE_URL: http://localhost:5000/consume_notifications
-      KAFKA_BROKER: kafka:9092 #kafka:9092
-      AMQP_URL: amqp://guest:guest@rabbitmq:5672/
-
-networks:
-  shared_network:
-    external: true
-
-    #depends_on:
-    #  - rabbitmq
-    #  - kafka
+      FLASK_ENV: production  # Set Flask environment to production
+      PYTHONUNBUFFERED: 1    # Ensure unbuffered output for logs
