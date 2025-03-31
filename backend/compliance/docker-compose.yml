@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  gighub-compliance:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gighub-compliance
+    ports:
+      - "5200:5200"
+    env_file:
+      - .env
+    networks:
+      - gighub-network
+    restart: always
+
+networks:
+  gighub-network:
+    external: true  
