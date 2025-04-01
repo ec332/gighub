@@ -3,14 +3,20 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 load_dotenv()
+os.environ["FLASK_RUN_PORT"] = "5100"
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:rootpassword@gighub-db:3306/gighub'
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+CORS(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:rootpassword@gighub-db:3306/gighub'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+with app.app_context():
+    db.create_all()
 
 class Job(db.Model):
     __tablename__ = 'job_records'
@@ -54,31 +60,36 @@ def internal_server_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 # create new job listing (scenario 1: publish job list)
-@app.route('/job', methods=['POST']) 
+@app.route('/job', methods=['POST'])
 def create_job():
-    data = request.json
-    if not data or 'employer_id' not in data or 'title' not in data:
-        return jsonify({"error": "Invalid job data"}), 400
-    
-    skills_str = ", ".join(data.get('skills', [])) if isinstance(data.get('skills'), list) else None
+    try:
+        data = request.json['job']
+        if not data or 'employer_id' not in data or 'title' not in data:
+            return jsonify({"error": "Invalid job data"}), 400
 
-    new_job = Job(
-        employer_id=data['employer_id'],
-        freelancer_id=data.get('freelancer_id'),
-        title=data['title'],
-        description=data.get('description'),
-        category=data.get('category'),
-        skills=skills_str,
-        price=data.get('price'),
-        status=data.get('status', 'hiring')
-    )
+        skills_str = ", ".join(data.get('skills', [])) if isinstance(data.get('skills'), list) else None
 
-    db.session.add(new_job)
-    db.session.commit()
-    return jsonify({"message": "Job recorded successfully", "job": new_job.json()}), 201
+        new_job = Job(
+            employer_id=data['employer_id'],
+            freelancer_id=data.get('freelancer_id'),
+            title=data['title'],
+            description=data.get('description'),
+            category=data.get('category'),
+            skills=skills_str,
+            price=data.get('price'),
+            status=data.get('status', 'hiring')
+        )
+
+        db.session.add(new_job)
+        db.session.commit()
+
+        return jsonify({"message": "Job recorded successfully", "job": new_job.json()}), 201
+
+    except Exception as e:
+        return jsonify({"error": "Error while creating job", "details": str(e)}), 500
 
 # view matching job listings according to skills (scenario2: match job)
-@app.route('/jobs/skills', methods=['GET'])
+@app.route('/job/skills', methods=['GET'])
 def get_jobs_by_skills():
     data = request.json
 
@@ -143,7 +154,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         print("Tables have been created!") 
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5100, debug=True)
 
 
 

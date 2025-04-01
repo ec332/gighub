@@ -1,5 +1,4 @@
-flask
-flask-cors
+Flask
 requests
-pika
 kafka-python
+flask-cors

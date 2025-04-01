@@ -1,3 +1,3 @@
 docker build -t gighub-chatgpt .
 
-docker run -p 5004:5004 --env-file .env  --name gighub-chatgpt gighub-chatgpt
+docker run -p 5400:5400 --env-file .env  --name gighub-chatgpt gighub-chatgpt

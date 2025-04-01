@@ -99,22 +99,18 @@ def create_job_listing():
         #####3. CALLING JOB RECORD MICROSERVICE######
         try:
             jobrecord_url = f"{JOBRECORD_SERVICE_URL}/job"
+            job_data['job']['description'] = job_description['description']
             jobrecord_response = requests.post(
                 jobrecord_url, 
                 json={
                     "job": job_data['job'],
                     "compliance": compliance_result,
-                    "description": job_description
                 }, 
                 headers={'Content-Type': 'application/json'}
             )
 
+
             # Check job record service response
-            print({
-                    "job": job_data['job'],
-                    "compliance": compliance_result,
-                    "description": job_description
-                })
             if jobrecord_response.status_code != 201:
                 error_message = f"Job record creation failed: {jobrecord_response.text}"
                 log_error_to_kafka(error_message, topic="job-listing-errors")

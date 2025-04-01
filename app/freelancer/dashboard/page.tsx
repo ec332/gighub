@@ -9,11 +9,18 @@ interface Job {
   status: string;
 }
 
+interface Profile {
+  Name: string;
+  Gender: string;
+  Skills: string;
+}
+
 export default function FreelancerDashboard() {
   const { data: session } = useSession();
   const email = session?.user?.email;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,27 +28,37 @@ export default function FreelancerDashboard() {
 
     const fetchDashboardData = async () => {
       try {
-        const jobsRes = await fetch(`/api/jobs?email=${email}`);
-        const walletRes = await fetch(`/api/wallet?email=${email}`);
-
+        const [jobsRes, walletRes, profileRes] = await Promise.all([
+          fetch(`/api/jobs?email=${email}`),
+          fetch(`/api/wallet?email=${email}`),
+          fetch(`https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/${email}/`),
+        ]);
+    
         const jobsData = await jobsRes.json();
         const walletData = await walletRes.json();
-
+        const profileData = await profileRes.json();
+    
+        console.log('Profile Data:', profileData); // Clearly log response
+    
         setJobs(jobsData || []);
         setWalletBalance(walletData.balance || 0);
+        setProfile(profileData.Freelancer || null);
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
+    
 
     fetchDashboardData();
   }, [email]);
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Freelancer Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6" style={{ color: '#1860f1' }}>
+        Freelancer Dashboard
+      </h1>
 
       {loading ? (
         <p>Loading dashboard...</p>
@@ -49,21 +66,30 @@ export default function FreelancerDashboard() {
         <>
           {/* Profile Info */}
           <div className="mb-6 bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold">Welcome, {email}</h2>
-            <p className="text-gray-600">You are logged in as a freelancer.</p>
+            <h2 className="text-xl font-semibold" style={{ color: '#1860f1' }}>
+              Welcome, {profile?.Name || email}
+            </h2>
+            <p className="text-gray-600">Gender: {profile?.Gender || 'N/A'}</p>
+            <p className="text-gray-600">Skills: {profile?.Skills || 'N/A'}</p>
           </div>
 
           {/* Wallet */}
           <div className="mb-6 bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">Wallet</h2>
-            <p className="text-green-600 text-lg font-medium">
-              Balance: ${walletBalance?.toFixed(2)}
+            <h2 className="text-xl font-semibold mb-2" style={{ color: '#1860f1' }}>
+              Wallet
+            </h2>
+            <p className="text-lg font-medium text-gray-700">
+                Balance: <span style={{ color: '#7db32e' }}>${walletBalance?.toFixed(2)}</span>
             </p>
+
+
           </div>
 
           {/* Jobs */}
           <div className="mb-6 bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Your Submitted Jobs</h2>
+            <h2 className="text-xl font-semibold mb-4" style={{ color: '#1860f1' }}>
+              Your Submitted Jobs
+            </h2>
             {jobs.length === 0 ? (
               <p className="text-gray-500">No jobs submitted yet.</p>
             ) : (
@@ -93,7 +119,9 @@ export default function FreelancerDashboard() {
 
           {/* Notifications (placeholder) */}
           <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">Notifications</h2>
+            <h2 className="text-xl font-semibold mb-2" style={{ color: '#1860f1' }}>
+              Notifications
+            </h2>
             <p className="text-gray-500">No new notifications.</p>
           </div>
         </>
