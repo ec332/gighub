@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # Update these URLs with actual service endpoints
 JOB_RECORD_UPDATE_URL = "http://localhost:5100/job/{job_id}"
-CREATE_PENDING_APPROVAL_URL = "http://localhost:5500/jobs"
+CREATE_PENDING_APPROVAL_URL = "http://localhost:5500/pendingapproval"
 
 # AMQP Configuration (Update this with actual credentials)
 AMQP_URL = "amqp://guest:guest@localhost:5672/"

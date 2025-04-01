@@ -20,7 +20,7 @@ class Job(db.Model):
 with app.app_context():
     db.create_all()
 
-@app.route('/jobs', methods=['POST'])
+@app.route('/pendingapproval', methods=['POST'])
 def add_job():
     data = request.get_json()
     employer_id = data.get('employerId')
@@ -45,7 +45,7 @@ def add_job():
 
     return jsonify({"message": "Job added successfully!"}), 201
 
-@app.route('/jobs', methods=['GET'])
+@app.route('/pendingapproval', methods=['GET'])
 def get_jobs():
     employer_id = request.args.get('employerId')
     if employer_id:
