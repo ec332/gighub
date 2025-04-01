@@ -9,7 +9,6 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return;
 
     if (status === 'authenticated') {
       router.push(
