@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import logo from '@/public/gighub.png';
 
-export default function CreateProfile() {
+export default function CreateFreelancerProfile() {
   const router = useRouter();
   const { data: session } = useSession();
   const email = session?.user?.email;
@@ -24,18 +24,30 @@ export default function CreateProfile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!email) {
+      alert('Session email not loaded yet. Try again.');
+      return;
+    }
+
+    console.log('📤 Submitting form data to OutSystems:');
+    console.log({ ...formData, Email: email });
+
     const res = await fetch('https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        Name: formData.Name,
         Email: email,
-        ...formData,
+        Gender: formData.Gender,
+        Skills: formData.Skills,
       }),
     });
 
     if (res.ok) {
+      console.log('✅ Profile creation successful!');
       router.push('/freelancer/dashboard');
     } else {
+      console.error('❌ Failed to POST to OutSystems');
       alert('Failed to create profile. Please try again.');
     }
   };
@@ -53,7 +65,10 @@ export default function CreateProfile() {
           />
           <span className="text-[#A3D743] font-bold italic text-sm tracking-wide">Just Swipe Right!</span>
         </div>
-        <h1 className="text-center text-3xl font-extrabold text-[#1860F1]">Create Your Freelancer Profile</h1>
+
+        <h1 className="text-center text-3xl font-extrabold text-[#1860F1]">
+          Create Your Freelancer Profile
+        </h1>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-4">
@@ -109,6 +124,8 @@ export default function CreateProfile() {
     </div>
   );
 }
+
+
 
 
 
