@@ -3,7 +3,7 @@ version: '3.8'
 services:
   match-job-service:
     build: .
-    container_name: match-job-service
+    container_name: match-job-container
     ports:
       - "6100:5000"
 
