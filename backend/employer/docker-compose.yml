@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  employer:
+    build: .
+    ports:
+      - "5400:5000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL_EMPLOYER: postgresql://employer_user:password@db/employer_db
+    volumes:
+      - .:/app
+    restart: always
+
+  db:
+    image: postgres:15
+    container_name: employer_db
+    environment:
+      POSTGRES_USER: employer_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: employer_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:
