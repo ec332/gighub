@@ -1,23 +1,23 @@
 version: "3.9"
 
 services:
-  gighub-db:
-    image: mysql:8.0
-    container_name: gighub-db
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: gighub
-    ports:
-      - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - gighub-network
+  # gighub-db:
+  #   image: mysql:8.0
+  #   container_name: gighub-db
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: rootpassword
+  #     MYSQL_DATABASE: gighub
+  #   ports:
+  #     - "3306:3306"
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
+  #   networks:
+  #     - gighub-network
 
-  flask-job-record:
+  flask-compliance:
     build:
       context: .
       dockerfile: Dockerfile
@@ -26,13 +26,10 @@ services:
       - "5600:5600"
     env_file:
       - .env
-    depends_on:
-      gighub-db:
-        condition: service_healthy
     networks:
       - gighub-network
     restart: always
 
 networks:
   gighub-network:
-    driver: bridge
+    external: true  # <--- this is the key
