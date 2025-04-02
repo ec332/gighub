@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Job {
   id: number;
@@ -40,6 +41,11 @@ export default function JobListings() {
   return (
     <div className="min-h-screen bg-gray-100 max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900">Matched Job Listings</h1>
+      <Link href="/carousel">
+      <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+        View in Carousel
+      </button>
+      </Link>
 
       {jobs.length === 0 ? (
         <p className="mt-4 text-gray-500">No matched jobs found.</p>
