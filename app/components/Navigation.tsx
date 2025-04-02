@@ -26,7 +26,7 @@ export default function Navigation() {
                   Dashboard
                 </Link>
                 <Link
-                  href="/publish-job"
+                  href="/freelancer/job-listings"
                   className="text-base font-medium text-white hover:text-[#bcef5d] transition"
                 >
                   Listings
