@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: gighub-compliance
     ports:
-      - "5200:5200"
+      - "5600:5600"
     env_file:
       - .env
     networks:
