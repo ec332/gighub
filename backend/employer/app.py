@@ -6,8 +6,7 @@ import os
 # Initialize the Flask app and database connection
 app = Flask(__name__)
 
-load_dotenv()
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL_EMPLOYER", "postgresql://myuser:mypassword@localhost/mydatabase")
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://employer_user:password@db/employer_db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -20,7 +19,7 @@ class Employer(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     company = db.Column(db.String(100), nullable=False)
-    wallet_id = db.Column(db.Integer, db.ForeignKey('wallet.id'), nullable=True)  # Assuming a Wallet model exists
+    wallet_id = db.Column(db.Integer, nullable=True)  # Assuming a Wallet model exists
 
     def __repr__(self):
         return f'<Employer {self.name}, {self.company}>'
