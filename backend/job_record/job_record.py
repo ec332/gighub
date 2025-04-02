@@ -107,6 +107,17 @@ def get_jobs_by_skills():
 
     return jsonify({"jobs": [job.json() for job in jobs]}), 200
 
+# get jobs assigned to a specific freelancer
+@app.route('/job/freelancer/<int:freelancer_id>', methods=['GET'])
+def get_jobs_by_freelancer(freelancer_id):
+    jobs = Job.query.filter_by(freelancer_id=freelancer_id).all()
+
+    if not jobs:
+        return jsonify({"message": "No jobs assigned to this freelancer."}), 200
+
+    return jsonify({"jobs": [job.json() for job in jobs]}), 200
+
+
 # update job details (scenario 3: update job status to finished/completed and compliance!)
 @app.route('/job/<int:job_id>', methods=['PUT'])
 def update_job_details(job_id):
