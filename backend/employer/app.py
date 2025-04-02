@@ -7,8 +7,9 @@ import os
 app = Flask(__name__)
 
 load_dotenv()
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL_EMPLOYER", "postgresql://localhost/mydatabase")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL_EMPLOYER", "postgresql://myuser:mypassword@localhost/mydatabase")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 # Define the Employer model
@@ -79,4 +80,4 @@ def get_employer(employer_id):
     })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
