@@ -9,20 +9,18 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return;
 
     if (status === 'authenticated') {
       router.push(
-        session.user?.userType === 'employer' 
-          ? '/employer/dashboard' 
-          : '/freelancer/dashboard'
+        session.user?.userType === 'employer'
+          ? '/employer/dashboard'
+          : '/freelancer/job-listings' // desired landing page
       );
     } else {
       router.push('/auth/signup');
     }
   }, [status, session, router]);
 
-  // Show loading state while checking auth
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -33,6 +31,5 @@ export default function Home() {
     );
   }
 
-  // Return null since we're redirecting
   return null;
-} 
+}
