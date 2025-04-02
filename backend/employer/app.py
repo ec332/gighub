@@ -19,6 +19,7 @@ class Employer(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     company = db.Column(db.String(100), nullable=False)
+    wallet_id = db.Column(db.Integer, db.ForeignKey('wallet.id'), nullable=True)  # Assuming a Wallet model exists
 
     def __repr__(self):
         return f'<Employer {self.name}, {self.company}>'
@@ -36,6 +37,7 @@ def add_employer():
     name = data.get('name')
     email = data.get('email')
     company = data.get('company')
+    wallet_id = data.get('wallet')
 
     # Validate required fields
     if not name or not email or not company:
@@ -47,7 +49,7 @@ def add_employer():
         return jsonify({"message": "Employer with this email already exists"}), 400
 
     # Create new employer and add to DB
-    new_employer = Employer(name=name, email=email, company=company)
+    new_employer = Employer(name=name, email=email, company=company, wallet_id=wallet_id)
     db.session.add(new_employer)
     db.session.commit()
 
@@ -57,7 +59,8 @@ def add_employer():
             "id": new_employer.id,
             "name": new_employer.name,
             "email": new_employer.email,
-            "company": new_employer.company
+            "company": new_employer.company,
+            "wallet": new_employer.wallet_id
         }
     }), 201
 
@@ -74,7 +77,8 @@ def get_employer(employer_id):
             "id": employer.id,
             "name": employer.name,
             "email": employer.email,
-            "company": employer.company
+            "company": employer.company,
+            "wallet_id": employer.wallet_id
         }
     })
 
