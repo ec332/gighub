@@ -119,5 +119,5 @@ def accept_job():
     return jsonify({"message": "Job accepted, escrow account created, and notification sent"}), 201
 
 if __name__ == '__main__':
-    port = 5000
+    port = 5002
     app.run(host="0.0.0.0", port=port)
