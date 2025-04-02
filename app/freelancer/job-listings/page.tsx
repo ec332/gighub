@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 interface Job {
   id: number;
@@ -14,26 +14,37 @@ interface Job {
 }
 
 export default function JobListings() {
+  const { data: session } = useSession();
+  const email = session?.user?.email;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
 
   useEffect(() => {
+    if (!email) return; // Wait until the email is available
+  
     async function fetchJobs() {
       try {
-        const res = await fetch('http://localhost:6100/matchjob');
+        const res = await fetch('http://localhost:5001/matchjob', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ freelancer_email: email }),
+        });
         if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
         const data = await res.json();
-        setJobs(data.jobs || []); // match your API response
+        setJobs(data.jobs || []);
       } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     }
-
+  
     fetchJobs();
-  }, []);
+  }, [email]); // Only run when email is available
 
   if (loading) return <div className="p-8">Loading matched jobs...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
