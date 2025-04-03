@@ -27,6 +27,8 @@ export default function FreelancerDashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     if (!email) return;
@@ -46,6 +48,7 @@ export default function FreelancerDashboard() {
         setJobs(jobsData || []);
         setWalletBalance(walletData.balance || 0);
         setProfile(profileData.Freelancer || null);
+        setEditedProfile(profileData.Freelancer || null);
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
       } finally {
@@ -55,6 +58,40 @@ export default function FreelancerDashboard() {
 
     fetchDashboardData();
   }, [email]);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedProfile((prev) => ({
+      ...prev!,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editedProfile) return;
+
+    try {
+      const response = await fetch('https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedProfile),
+      });
+
+      if (response.ok) {
+        setProfile(editedProfile);
+        setIsEditing(false);
+      } else {
+        console.error('Failed to update profile');
+      }
+    } catch (err) {
+      console.error('Error updating profile:', err);
+    }
+  };
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
@@ -104,6 +141,7 @@ export default function FreelancerDashboard() {
                 e.currentTarget.style.backgroundColor = '#1860f1';
                 e.currentTarget.style.color = '#fff';
               }}
+              onClick={handleEditClick}
             >
               Edit
             </button>
@@ -111,10 +149,59 @@ export default function FreelancerDashboard() {
 
           {/* Profile Info */}
           <div className="mb-6 bg-white p-6 rounded-xl shadow">
-            <p className="text-gray-600 text-base mb-4">Gender: {profile?.Gender || 'N/A'}</p>
-            <p className="text-gray-600 text-base">
-              Skills: {profile?.Skills?.split(',').join(', ') || 'N/A'}
-            </p>
+            {isEditing ? (
+              <div>
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    name="Name"
+                    value={editedProfile?.Name || ''}
+                    onChange={handleProfileChange}
+                    className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    name="Gender"
+                    value={editedProfile?.Gender || ''}
+                    onChange={handleProfileChange}
+                    className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    name="Skills"
+                    value={editedProfile?.Skills || ''}
+                    onChange={handleProfileChange}
+                    className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  className="mt-4 px-4 py-2 rounded text-white font-medium transition"
+                  style={{ backgroundColor: '#1860f1' }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#bcef5d';
+                    e.currentTarget.style.color = '#000';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#1860f1';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onClick={handleSaveProfile}
+                >
+                  Save
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="text-gray-600 text-base mb-4">Gender: {profile?.Gender || 'N/A'}</p>
+                <p className="text-gray-600 text-base">
+                  Skills: {profile?.Skills?.split(',').join(', ') || 'N/A'}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Wallet Section */}
@@ -134,6 +221,7 @@ export default function FreelancerDashboard() {
             >
               Withdraw
             </button>
+
           </div>
 
           <div className="mb-6 bg-white p-4 rounded-lg shadow">
@@ -142,12 +230,12 @@ export default function FreelancerDashboard() {
             </p>
           </div>
 
-          {/* Submitted Jobs */}
+          {/* Applied Jobs */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-black">Your Submitted Jobs</h2>
+            <h2 className="text-xl font-semibold mb-4 text-black">Your Jobs</h2>
             {jobs.length === 0 ? (
               <div className="bg-white p-4 rounded-lg shadow">
-                <p className="text-gray-500 text-base">No jobs submitted yet.</p>
+                <p className="text-gray-500 text-base">No jobs applied yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,6 +268,8 @@ export default function FreelancerDashboard() {
     </div>
   );
 }
+
+
 
 
 
