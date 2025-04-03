@@ -151,6 +151,16 @@ def get_jobs():
     jobs = Job.query.all()
     return jsonify({"jobs": [job.json() for job in jobs]}), 200
 
+# get jobs created by a specific employer
+@app.route('/job/employer/<int:employer_id>', methods=['GET'])
+def get_jobs_by_employer(employer_id):
+    jobs = Job.query.filter_by(employer_id=employer_id).all()
+
+    if not jobs:
+        return jsonify({"message": "No jobs created by this employer."}), 200
+
+    return jsonify({"jobs": [job.json() for job in jobs]}), 200
+
 # view details of one specific job
 @app.route('/job/<int:job_id>', methods=['GET'])
 def get_job(job_id):

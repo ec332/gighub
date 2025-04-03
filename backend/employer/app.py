@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS  
 from dotenv import load_dotenv
 import os
 
 # Initialize the Flask app and database connection
 app = Flask(__name__)
-
+CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://employer_user:password@db/employer_db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -68,6 +69,24 @@ def add_employer():
 @app.route('/api/employer/<int:employer_id>', methods=['GET'])
 def get_employer(employer_id):
     employer = Employer.query.get(employer_id)
+
+    if employer is None:
+        return jsonify({"message": "Employer not found"}), 404
+
+    return jsonify({
+        "employer": {
+            "id": employer.id,
+            "name": employer.name,
+            "email": employer.email,
+            "company": employer.company,
+            "wallet_id": employer.wallet_id
+        }
+    })
+
+# GET route to retrieve an employer by email
+@app.route('/api/employer/<string:email>', methods=['GET'])
+def get_employer_by_email(email):
+    employer = Employer.query.filter_by(email=email).first()
 
     if employer is None:
         return jsonify({"message": "Employer not found"}), 404

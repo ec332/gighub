@@ -45,6 +45,7 @@ def consume_errors():
         'approve-job-errors',
         'match-job-errors',
         'accept-job-errors',
+        'error-logs',
         bootstrap_servers=KAFKA_BROKER,
         value_deserializer=lambda m: json.loads(m.decode('utf-8'))
     )
