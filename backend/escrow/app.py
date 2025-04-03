@@ -2,8 +2,11 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app) 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "postgresql://escrow_user:escrow_pass@localhost:5433/escrow_db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
