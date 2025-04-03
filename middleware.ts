@@ -12,7 +12,7 @@ export async function middleware(request: NextRequestWithAuth) {
   const authPaths = ['/auth', '/auth/signin', '/auth/signup', '/auth/sign'];
   const isAuthPage = pathStartsWith(authPaths);
 
-  const employerPaths = ['/employer', '/employer/dash', '/employer/dashboard'];
+  const employerPaths = ['/employer', '/employer/dash', '/employer/dashboard', '/employer/create-profile','/employer/publish-job'];
   const freelancerPaths = ['/freelancer', '/freelancer/dash', '/freelancer/dashboard', '/freelancer/create-profile', '/freelancer/job-listings'];
 
   const isApiPage = pathname.startsWith('/api');
@@ -49,7 +49,7 @@ export async function middleware(request: NextRequestWithAuth) {
       ) {
         return NextResponse.redirect(new URL('/employer/dashboard', request.url));
       }
-      if (pathname === '/employer/dashboard') {
+      if (pathname === '/employer/dashboard' || pathname === '/employer/create-profile' || pathname === '/employer/publish-job') {
         return NextResponse.next();
       }
     }
@@ -76,7 +76,9 @@ export async function middleware(request: NextRequestWithAuth) {
     const allowedPaths = [
       '/employer/dashboard',
       '/freelancer/dashboard',
-      '/freelancer/create-profile'
+      '/freelancer/create-profile',
+      '/employer/create-profile',
+      '/employer/publish-job'
     ];
 
     if (!allowedPaths.includes(pathname)) {

@@ -1,44 +1,116 @@
 'use client';
-
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import ProfileForm from '@/app/components/ProfileForm';
+import Image from 'next/image';
+import logo from '@/public/gighub.png';
 
 export default function CreateEmployerProfile() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const email = session?.user?.email;
 
   useEffect(() => {
+    if (status === 'loading') return; // Wait until authentication status is known
+  
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (session?.user?.userType !== 'employer') {
-      router.push('/freelancer/dashboard');
+      return;
     }
-  }, [session, status, router]);
+  
+    if (session?.user?.userType !== 'employer') {
+      router.push('/');
+    }
+  }, [session, status]);
 
-  const handleSubmit = async (data: any) => {
-    // Here you would typically make an API call to save the profile
-    console.log('Employer Profile Data:', data);
-    // For demo purposes, we'll just simulate a delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  };
+    const [formData, setFormData] = useState({
+      Name: '',
+      Email: '',
+      Company: '',
+    });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+  
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      const res = await fetch('http://localhost:5400/api/employer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.Name,
+          email: email,
+          company: formData.Company,
+        }),
+      });
+  
+      if (res.ok) {
+        router.push('/employer/dashboard');
+      } else {
+        alert('Failed to create profile. Please try again.');
+      }
+    };
 
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create Employer Profile</h1>
-          <p className="mt-2 text-gray-600">
-            Complete your profile to start posting jobs and finding talent.
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white to-blue-50">
+      <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-xl border border-gray-200">
+        <div className="flex items-center justify-between mb-2 w-full">
+          <Image
+            src={logo}
+            alt="GigHub Logo"
+            width={120}
+            height={120}
+            className="rounded-md"
+          />
+          <span className="text-[#A3D743] font-bold italic text-sm tracking-wide">Just Swipe Right!</span>
         </div>
-        <ProfileForm userType="employer" onSubmit={handleSubmit} />
+
+        <h1 className="text-center text-3xl font-extrabold text-[#1860F1]">
+          Create Your Employer Profile
+        </h1>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Name</label>
+              <input
+                type="text"
+                name="Name"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm px-4 py-3 focus:ring-[#1860F1] focus:border-[#1860F1]"
+                value={formData.Name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Company</label>
+              <input
+                type="text"
+                name="Company"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm px-4 py-3 focus:ring-[#1860F1] focus:border-[#1860F1]"
+                value={formData.Company}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 rounded-md shadow-md text-sm font-semibold text-white bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200"
+          >
+            Create Profile
+          </button>
+        </form>
       </div>
     </div>
   );
-} 
+}
