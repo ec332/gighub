@@ -29,6 +29,11 @@ export default function FreelancerDashboard() {
   const [hasAnimated, setHasAnimated] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
+  const [showNotifications, setShowNotifications] = useState(true);
+  const [notifications, setNotifications] = useState([
+    'New job application received for "UI/UX Designer".',
+    'Your job "Temp Sales Assistant" has been marked as completed.',
+  ]);
 
   useEffect(() => {
     if (!email) return;
@@ -93,8 +98,38 @@ export default function FreelancerDashboard() {
     }
   };
 
+  const handleAcknowledge = () => {
+    setShowNotifications(false);
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
+      {/* Notification Modal */}
+      {showNotifications && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-4">New Notifications</h2>
+            <ul className="list-disc pl-5 mb-4">
+              {notifications.map((notification, index) => (
+                <li key={index} className="text-gray-700">
+                  {notification}
+                </li>
+              ))}
+            </ul>
+            <button
+              className="mt-2 w-full bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200 text-white px-4 py-2 rounded-md"
+              onClick={handleAcknowledge}
+            >
+              Acknowledge
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header with Dove Animation */}
       <div className="flex items-center space-x-3 mb-4">
         <motion.div
@@ -121,153 +156,133 @@ export default function FreelancerDashboard() {
         <h1 className="text-3xl font-bold text-[#1860f1]">Freelancer Dashboard</h1>
       </div>
 
-      {loading ? (
-        <p>Loading dashboard...</p>
-      ) : (
-        <>
-          {/* Welcome + Edit */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-black">
-              Welcome, {profile?.Name ? `${profile.Name}!` : email}
-            </h2>
+      {/* Welcome + Edit */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-black">
+          Welcome, {profile?.Name ? `${profile.Name}!` : email}
+        </h2>
+        <button
+          className="px-4 py-2 rounded text-white font-medium transition"
+          style={{ backgroundColor: '#1860f1' }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = '#bcef5d';
+            e.currentTarget.style.color = '#1860f1';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = '#1860f1';
+            e.currentTarget.style.color = '#fff';
+          }}
+          onClick={handleEditClick}
+        >
+          Edit
+        </button>
+      </div>
+
+      {/* Profile Info */}
+      <div className="mb-6 bg-white p-6 rounded-xl shadow">
+        {isEditing ? (
+          <div>
+            <input
+              type="text"
+              name="Name"
+              value={editedProfile?.Name || ''}
+              onChange={handleProfileChange}
+              className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              name="Gender"
+              value={editedProfile?.Gender || ''}
+              onChange={handleProfileChange}
+              className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              name="Skills"
+              value={editedProfile?.Skills || ''}
+              onChange={handleProfileChange}
+              className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
             <button
-              className="px-4 py-2 rounded text-white font-medium transition"
+              className="mt-4 px-4 py-2 rounded text-white font-medium transition"
               style={{ backgroundColor: '#1860f1' }}
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = '#bcef5d';
-                e.currentTarget.style.color = '#000';
+                e.currentTarget.style.color = '#1860f1';
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.backgroundColor = '#1860f1';
                 e.currentTarget.style.color = '#fff';
               }}
-              onClick={handleEditClick}
+              onClick={handleSaveProfile}
             >
-              Edit
+              Save
             </button>
           </div>
+        ) : (
+          <>
+            <p className="text-gray-600 text-base mb-4">Gender: {profile?.Gender || 'N/A'}</p>
+            <p className="text-gray-600 text-base">
+              Skills: {profile?.Skills?.split(',').join(', ') || 'N/A'}
+            </p>
+          </>
+        )}
+      </div>
 
-          {/* Profile Info */}
-          <div className="mb-6 bg-white p-6 rounded-xl shadow">
-            {isEditing ? (
-              <div>
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    name="Name"
-                    value={editedProfile?.Name || ''}
-                    onChange={handleProfileChange}
-                    className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    name="Gender"
-                    value={editedProfile?.Gender || ''}
-                    onChange={handleProfileChange}
-                    className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    name="Skills"
-                    value={editedProfile?.Skills || ''}
-                    onChange={handleProfileChange}
-                    className="mb-2 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+      {/* Wallet Section */}
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xl font-semibold text-black">Wallet</h2>
+        <button
+          className="px-4 py-2 rounded text-white font-medium transition-colors duration-200"
+          style={{ backgroundColor: '#1860f1' }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = '#bcef5d';
+            e.currentTarget.style.color = '#1860f1';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = '#1860f1';
+            e.currentTarget.style.color = '#ffffff';
+          }}
+        >
+          Withdraw
+        </button>
+      </div>
+
+      <div className="mb-6 bg-white p-4 rounded-lg shadow">
+        <p className="text-gray-600 text-base">Balance: ${walletBalance?.toFixed(2) || '0.00'}</p>
+      </div>
+
+      {/* Applied Jobs */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-black">Your Jobs</h2>
+        {jobs.length === 0 ? (
+          <div className="bg-white p-4 rounded-lg shadow">
+            <p className="text-gray-500 text-base">No jobs applied yet.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {jobs.map((job) => (
+              <div
+                key={job.id}
+                className="bg-white border rounded-lg p-4 shadow hover:shadow-md transition"
+              >
+                <h3 className="text-lg font-semibold text-gray-800">{job.title}</h3>
+                <p className="text-gray-600 mt-1 capitalize mb-2">Status: {job.status}</p>
                 <button
-                  className="mt-4 px-4 py-2 rounded text-white font-medium transition"
-                  style={{ backgroundColor: '#1860f1' }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = '#bcef5d';
-                    e.currentTarget.style.color = '#000';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = '#1860f1';
-                    e.currentTarget.style.color = '#fff';
-                  }}
-                  onClick={handleSaveProfile}
+                  className="text-sm font-medium text-blue-600 hover:text-green-600"
+                  onClick={() => console.log(`Viewing job ID: ${job.id}`)}
                 >
-                  Save
+                  View Listing
                 </button>
               </div>
-            ) : (
-              <>
-                <p className="text-gray-600 text-base mb-4">Gender: {profile?.Gender || 'N/A'}</p>
-                <p className="text-gray-600 text-base">
-                  Skills: {profile?.Skills?.split(',').join(', ') || 'N/A'}
-                </p>
-              </>
-            )}
+            ))}
           </div>
-
-          {/* Wallet Section */}
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xl font-semibold text-black">Wallet</h2>
-            <button
-              className="px-4 py-2 rounded text-white font-medium transition"
-              style={{ backgroundColor: '#1860f1' }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#bcef5d';
-                e.currentTarget.style.color = '#000';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#1860f1';
-                e.currentTarget.style.color = '#fff';
-              }}
-            >
-              Withdraw
-            </button>
-
-          </div>
-
-          <div className="mb-6 bg-white p-4 rounded-lg shadow">
-            <p className="text-gray-600 text-base">
-              Balance: ${walletBalance?.toFixed(2) || '0.00'}
-            </p>
-          </div>
-
-          {/* Applied Jobs */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-black">Your Jobs</h2>
-            {jobs.length === 0 ? (
-              <div className="bg-white p-4 rounded-lg shadow">
-                <p className="text-gray-500 text-base">No jobs applied yet.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {jobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-white border rounded-lg p-4 shadow hover:shadow-md transition"
-                  >
-                    <h3 className="text-lg font-semibold text-gray-800">{job.title}</h3>
-                    <p className="text-gray-600 mt-1 capitalize mb-2">Status: {job.status}</p>
-                    <button
-                      className="text-sm font-medium text-blue-600 hover:text-green-600"
-                      onClick={() => console.log(`Viewing job ID: ${job.id}`)}
-                    >
-                      View Listing
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Notifications */}
-          <h2 className="text-xl font-semibold mb-2 text-black">Notifications</h2>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <p className="text-gray-500 text-base">No new notifications.</p>
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }
+
 
 
 

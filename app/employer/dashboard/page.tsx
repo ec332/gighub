@@ -151,7 +151,7 @@ export default function EmployerDashboard() {
             </ul>
             <button
               className="mt-2 w-full bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200 text-white px-4 py-2 rounded-md"
-              onClick={handleAcknowledge}>Acknowledge & Close</button>
+              onClick={handleAcknowledge}>Acknowledge</button>
           </div>
         </div>
       )}
