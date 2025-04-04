@@ -41,14 +41,14 @@ export default function EmployerDashboard() {
   const [approvalJobs, setApprovalJobs] = useState([]);
 
   const [showNotifications, setShowNotifications] = useState(true);
-  const [notifications, setNotifications] = useState([
-    'New application received for "Temp Sales Assistant".',
-    'Your job "Server" has been marked as completed.',
-  ]);
+  // const [notifications, setNotifications] = useState([
+  //   'New application received for "Temp Sales Assistant".',
+  //   'Your job "Server" has been marked as completed.',
+  // ]);
 
   // const [walletBalance, setWalletBalance] = useState(0);
   // const [showNotifications, setShowNotifications] = useState(true);
-  // const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -73,17 +73,27 @@ export default function EmployerDashboard() {
         console.error(error);
       }
     }
+    
+    fetchEmployerInfo();
+  }, [session, status, router]);
+
+  useEffect(() => {
+    if (!employerInfo.id) return;
 
     async function fetchJobs() {
       try {
         const response = await fetch(`http://localhost:5100/job/employer/${employerInfo.id}`);
         if (!response.ok) throw new Error('Failed to fetch jobs');
         const data = await response.json();
-        setJobs(data.jobs);
+        // setJobs(data);
+        setJobs(data?.jobs || []);  
+        console.log(data)
       } catch (error) {
         console.error(error);
       }
     }
+    fetchJobs();
+  }, [employerInfo.id]);
 
     // async function fetchApprovalJobs() {
     //   try {
@@ -108,23 +118,25 @@ export default function EmployerDashboard() {
     //   }
     // }
 
-    // async function fetchNotifications() {
-    //   try {
-    //     const response = await fetch(`{API_URL}/notifications?employerID=${session?.user?.id}`);
-    //     if (!response.ok) throw new Error('Failed to fetch notifications');
-    //     const data = await response.json();
-    //     setNotifications(data.notifications);
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }
+    useEffect(() => {
+      if (!employerInfo.id) return;
+    
+      async function fetchNotifications() {
+        try {
+          const response = await fetch(`http://localhost:5800/consume_notifications/${employerInfo.id}`);
+          if (!response.ok) throw new Error('Failed to fetch notifications');
+          const data = await response.json();
+          setNotifications(data.notifications || []);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    
+      fetchNotifications();
+    }, [employerInfo.id]);
 
-    fetchEmployerInfo();
-    fetchJobs();
     // fetchApprovalJobs();
     // fetchWalletBalance();
-    // fetchNotifications();
-  }, [session, status, router]);
 
   const handleAcknowledge = () => {
     setShowNotifications(false);
@@ -142,6 +154,7 @@ export default function EmployerDashboard() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
             <h2 className="text-2xl font-bold mb-4">New Notifications</h2>
+            {notifications.length > 0 ? (
             <ul className="list-disc pl-5 mb-4">
               {notifications.map((notification, index) => (
                 <li key={index} className="text-gray-700">
@@ -149,10 +162,14 @@ export default function EmployerDashboard() {
                 </li>
               ))}
             </ul>
+          ) : (
+            <p className="text-gray-600 mb-4">No new notifications.</p>
+          )}
             <button
               className="mt-2 w-full bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200 text-white px-4 py-2 rounded-md"
               onClick={handleAcknowledge}>Acknowledge</button>
           </div>
+
         </div>
       )}
 
@@ -187,7 +204,7 @@ export default function EmployerDashboard() {
           <h2 className="text-xl font-bold">My Job Listings</h2>
           <button className="text-white px-4 py-2 rounded-md bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200" onClick={() =>{console.log('Publish Job button clicked'); router.push('/employer/publish-job')}}>+ Publish New Job</button>
         </div>
-        {jobs.length === 0 ? (
+        {Array.isArray(jobs) && jobs.length === 0 ? (
           <p className="mt-4 text-gray-500 bg-white p-4 shadow rounded-lg">No job listings yet.</p>
         ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">

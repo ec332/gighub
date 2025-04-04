@@ -9,7 +9,8 @@ WORKDIR /app
 # Install dependencies
 RUN pip install --no-cache-dir \
     flask \
-    pika
+    pika \
+    flask-cors
 
 COPY . .
 # Expose the port the app runs on
