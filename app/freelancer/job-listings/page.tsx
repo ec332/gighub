@@ -76,7 +76,7 @@ export default function JobListings() {
       // Update the job status locally
       setJobs((prevJobs) =>
         prevJobs.map((j) =>
-          j.id === job.id ? { ...j, status: 'accepted' } : j
+          j.id === job.id ? { ...j, status: 'close' } : j
         )
       );
     } catch (err: any) {
@@ -111,27 +111,28 @@ export default function JobListings() {
               <p className="text-sm text-gray-600">Category: {job.category}</p>
               <p className="text-sm text-gray-600">Skills: {job.skills?.join(', ')}</p>
               <p className="text-sm text-gray-600">Price: ${job.price}</p>
-              <span
-                className={`inline-block px-2 py-1 text-xs rounded ${
-                  job.status === 'open'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
-                }`}
-              >
-                {job.status}
-              </span>
-              {/* Accept Job Button */}
-              <button
-                onClick={() => handleAcceptJob(job)}
-                disabled={job.status === 'accepted'}
-                className={`mt-4 px-4 py-2 rounded transition ${
-                  job.status === 'accepted'
-                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                    : 'bg-green-500 text-white hover:bg-green-600'
-                }`}
-              >
-                {job.status === 'accepted' ? 'Job Accepted' : 'Accept Job'}
-              </button>
+              <div className="flex items-center justify-between">
+                <span
+                  className={`inline-block px-2 py-1 text-xs rounded ${
+                    job.status === 'hiring'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {job.status}
+                </span>
+                <button
+                  onClick={() => handleAcceptJob(job)}
+                  disabled={job.status === 'close'}
+                  className={`px-2 py-1 text-xs rounded transition ${
+                    job.status === 'close'
+                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                      : 'bg-green-500 text-white hover:bg-green-600'
+                  }`}
+                >
+                  {job.status === 'close' ? 'Job Accepted' : 'Accept Job'}
+                </button>
+              </div>
             </div>
           ))}
         </div>
