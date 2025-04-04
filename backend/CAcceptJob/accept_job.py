@@ -47,9 +47,7 @@ def accept_job():
         employer_id = job_details.get('employer_id')
         freelancer_email = job_details.get('freelancer_email')
         pay = job_details.get('pay')
-        #application_id= job_details.get('application_id')
-        #wallet_id = job_details.get('wallet_id')
-
+        
         # Step 1: Call the OutSystems Freelancer API for freelancer ID
         print(f"Fetching freelancer details for email: {freelancer_email}")
         freelancer_response = requests.get(f'{FREELANCER_SERVICE_URL}/{freelancer_email}/')
