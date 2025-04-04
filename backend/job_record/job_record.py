@@ -138,10 +138,17 @@ def update_job_details(job_id):
             return jsonify({"error": f"Invalid status. Must be one of {valid_statuses}"}), 400
         job.status = new_status
 
+    # Update freelancer_id
+    if 'freelancer_id' in data:
+        new_freelancer_id = data['freelancer_id']
+        if not isinstance(new_freelancer_id, int):
+            return jsonify({"error": "Freelancer_id must be an integer"}), 400
+        job.freelancer_id = new_freelancer_id
+
     db.session.commit()
 
     return jsonify({
-        "message": "Job status updated successfully",
+        "message": "Job updated successfully",
         "job": job.json(),
     }), 200
 

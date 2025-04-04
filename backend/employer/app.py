@@ -61,7 +61,7 @@ def add_employer():
             "name": new_employer.name,
             "email": new_employer.email,
             "company": new_employer.company,
-            "wallet": new_employer.wallet_id
+            "wallet_id": new_employer.wallet_id
         }
     }), 201
 
