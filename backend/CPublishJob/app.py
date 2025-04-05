@@ -17,8 +17,7 @@ COMPLIANCE_SERVICE_URL = os.getenv('COMPLIANCE_SERVICE_URL', 'http://localhost:5
 CHATGPT_SERVICE_URL = os.getenv('CHATGPT_SERVICE_URL', 'http://localhost:5700')
 WALLET_SERVICE_URL = os.getenv('CHATGPT_SERVICE_URL', 'http://localhost:5300')
 JOBRECORD_SERVICE_URL = os.getenv('JOBRECORD_SERVICE_URL', 'http://localhost:5100')
-
-
+ESCROW_SERVICE_URL = 'http://localhost:5200/api/escrow'
 
 # Kafka Configuration
 KAFKA_BROKER = 'localhost:29092'
@@ -52,7 +51,6 @@ def create_job_listing():
         try:
             # Call Compliance Microservice
             compliance_url = f"{COMPLIANCE_SERVICE_URL}/compliance"
-            print(job_data)
 
             compliance_response = requests.post(
                 compliance_url, 
@@ -62,7 +60,6 @@ def create_job_listing():
             # Check the compliance and raise an error if not compliant
             response_data = compliance_response.json()
             if not response_data['compliance']['is_compliant']:
-                print("hereherhe")
                 raise ValueError(f"Compliance error: {response_data['compliance']['remarks']}")
 
 
@@ -70,7 +67,6 @@ def create_job_listing():
             if compliance_response.status_code != 201:
                 # Log error and return compliance service error
                 error_message = f"Compliance check failed: {compliance_response.text}"
-                print(error_message)
                 log_error_to_kafka(error_message, topic="publish-job-errors")
                 return jsonify({"error": "Compliance check failed"}), compliance_response.status_code
             
@@ -91,7 +87,6 @@ def create_job_listing():
 
         #####2. CALLING WALLET TO SEE ENOUGH MONEY######
         try:
-            print(f"Calling wallet Microservice at: {WALLET_SERVICE_URL}")
             wallet_id = job_data['job']['wallet']
 
             # Construct the URL for the wallet service
@@ -103,9 +98,7 @@ def create_job_listing():
             # Check the response from the wallet service
             if response.status_code == 200:
                 balance = response.json().get('balance')
-                
-                print(balance)
-                # Check if balance is insufficient
+        
                 if balance < job_data['job']['price']:
                     raise ValueError("Wallet error: Insufficient balance")
             else:
@@ -137,8 +130,6 @@ def create_job_listing():
                 return jsonify({"error": "Failed to generate job description"}), chatgpt_response.status_code
             
             job_description = chatgpt_response.json()
-
-
         except requests.exceptions.RequestException as e:
             # Network or request-related errors
             error_message = f"Request to ChatGPT Service failed: {str(e)}"
@@ -151,7 +142,6 @@ def create_job_listing():
         try:
             jobrecord_url = f"{JOBRECORD_SERVICE_URL}/job"
             job_data['job']['description'] = job_description['description']
-            print(job_data['job'])
             jobrecord_response = requests.post(
                 jobrecord_url, 
                 json={
@@ -160,7 +150,7 @@ def create_job_listing():
                 }, 
                 headers={'Content-Type': 'application/json'}
             )
-
+            job_data['job_id'] = jobrecord_response.json()['job_id']
 
             # Check job record service response
             if jobrecord_response.status_code != 201:
@@ -168,23 +158,55 @@ def create_job_listing():
                 log_error_to_kafka(error_message, topic="publish-job-errors")
                 return jsonify({"error": "Failed to create job record"}), jobrecord_response.status_code
             
-            job_record = jobrecord_response.json()
-
-            # Update return to include job record
-            return jsonify({
-                "status": "success"
-                # "message": "Job listing processed successfully",
-                # "compliance": compliance_result,
-                # "description": job_description,
-                # "job_record": job_record
-            }), 201
-
         except requests.exceptions.RequestException as e:
             # Network or request-related errors
             error_message = f"Request to Job Record Service failed: {str(e)}"
             log_error_to_kafka(error_message, topic="publish-job-errors")
             return jsonify({"error": "Failed to process job listing"}), 500
+        
 
+        # Step 5: Deduct money from wallet 
+        try:
+            print(f"Invoking wallet microservice to deduct money for job ID: {job_data['job_id']}")
+            wallet_response = requests.post(
+                f"{WALLET_SERVICE_URL}/wallet/{job_data['job']['wallet']}", 
+                json={"amount": -job_data['job']['price']},
+                headers={'Content-Type': 'application/json'
+            })
+
+            if wallet_response.status_code != 200:
+                raise ValueError(f"Error deducting money from wallet: {wallet_response.text}")
+            wallet_data = wallet_response.json()
+
+        except ValueError as e:
+            # Catch the "Insufficient balance" error
+            return jsonify({"error": str(e)}), 400  # Return 400 Bad Request for insufficient balance
+
+        print(job_data)
+        # Step 6: Create escrow account
+        try:
+            print(f"Invoking escrow microservice to create escrow account for job ID: {job_data['job_id']}")
+            escrow_response = requests.post(f'{ESCROW_SERVICE_URL}', json={'job_id': job_data['job_id'], 'employer_id': job_data['job']['employer_id'], 'amount': job_data['job']['price']})
+            if escrow_response.status_code != 201:
+                raise ValueError(f"Error creating escrow account: {escrow_response.text}")
+            escrow_data = escrow_response.json()
+            #ESCROW ID JUST TO TRACK THE ESCROW ACCOUNT, REMOVE AFTER
+            escrow_id = escrow_data.get("escrow_id")
+            print(f"Escrow account created, details: {escrow_data}")
+            job_data['escrow_id'] = escrow_id
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400  
+
+        # print(job_data)
+    # Update return to include job record
+        return jsonify({
+            "status": "success"
+            # "message": "Job listing processed successfully",
+            # "compliance": compliance_result,
+            # "description": job_description,
+            # "job_record": job_record
+        }), 201
+    
     except Exception as e:
         # Catch-all for unexpected errors
         error_message = f"Unexpected error in job listing creation: {str(e)}"
