@@ -39,7 +39,7 @@ export default function CreateEmployerProfile() {
     
       try {
         // Step 1: Create wallet
-        const walletRes = await fetch('http://localhost:5400/wallet/create', {
+        const walletRes = await fetch('http://localhost:5300/wallet/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
