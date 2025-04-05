@@ -13,7 +13,7 @@ export async function middleware(request: NextRequestWithAuth) {
   const isAuthPage = pathStartsWith(authPaths);
 
   const employerPaths = ['/employer', '/employer/dash', '/employer/dashboard', '/employer/create-profile','/employer/publish-job'];
-  const freelancerPaths = ['/freelancer', '/freelancer/dash', '/freelancer/dashboard', '/freelancer/create-profile', '/freelancer/job-listings'];
+  const freelancerPaths = ['/freelancer', '/freelancer/dash', '/freelancer/dashboard', '/freelancer/create-profile', '/freelancer/job-listings', '/freelancer/job-listings/carousel'];
 
   const isApiPage = pathname.startsWith('/api');
 
