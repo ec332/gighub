@@ -15,7 +15,9 @@ CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 # Kafka Configuration
 COMPLIANCE_SERVICE_URL = os.getenv('COMPLIANCE_SERVICE_URL', 'http://localhost:5600')
 CHATGPT_SERVICE_URL = os.getenv('CHATGPT_SERVICE_URL', 'http://localhost:5700')
+WALLET_SERVICE_URL = os.getenv('CHATGPT_SERVICE_URL', 'http://localhost:5300')
 JOBRECORD_SERVICE_URL = os.getenv('JOBRECORD_SERVICE_URL', 'http://localhost:5100')
+
 
 
 # Kafka Configuration
@@ -44,30 +46,31 @@ def create_job_listing():
         # Validate basic job data structure
         if not job_data or 'job' not in job_data:
             return jsonify({"error": "Invalid job data format"}), 400
-
-        # Extract job ID from the job data
-        job_id = job_data['job'].get('id')
-        if not job_id:
-            return jsonify({"error": "Job ID is required"}), 400
+        skills = job_data['job'].get("skills")
 
         #####1. CALLING COMPLIANCE MICROSERVICE######
         try:
             # Call Compliance Microservice
-            compliance_url = f"{COMPLIANCE_SERVICE_URL}/compliance/{job_id}"
-            print(f"Calling Compliance Microservice at: {compliance_url}")
-            print(f"Job Data: {json.dumps(job_data)}")
+            compliance_url = f"{COMPLIANCE_SERVICE_URL}/compliance"
+            print(job_data)
 
             compliance_response = requests.post(
                 compliance_url, 
                 json=job_data, 
                 headers={'Content-Type': 'application/json'}
             )
-            print(f"Compliance Response: {compliance_response.status_code} - {compliance_response.text}")
+            # Check the compliance and raise an error if not compliant
+            response_data = compliance_response.json()
+            if not response_data['compliance']['is_compliant']:
+                print("hereherhe")
+                raise ValueError(f"Compliance error: {response_data['compliance']['remarks']}")
+
 
             # Check compliance service response
             if compliance_response.status_code != 201:
                 # Log error and return compliance service error
                 error_message = f"Compliance check failed: {compliance_response.text}"
+                print(error_message)
                 log_error_to_kafka(error_message, topic="publish-job-errors")
                 return jsonify({"error": "Compliance check failed"}), compliance_response.status_code
             
@@ -78,8 +81,47 @@ def create_job_listing():
             error_message = f"Request to Compliance Service failed: {str(e)}"
             log_error_to_kafka(error_message, topic="publish-job-errors")
             return jsonify({"error": "Failed to process job listing due to compliance errors"}), 500
+        except ValueError as e:
+            # Handle the case where the response is not valid JSON
+            error_message = f"Invalid JSON response from Compliance Service: {str(e)}"
+            log_error_to_kafka(error_message, topic="publish-job-errors")
+            return jsonify({"error": str(e)}), 400  # Return 400 Bad Request with the remarks as the error message
         
-        #####2. CALLING CHATGPT MICROSERVICE######
+
+
+        #####2. CALLING WALLET TO SEE ENOUGH MONEY######
+        try:
+            print(f"Calling wallet Microservice at: {WALLET_SERVICE_URL}")
+            wallet_id = job_data['job']['wallet']
+
+            # Construct the URL for the wallet service
+            wallet_url = f"{WALLET_SERVICE_URL}/wallet/{wallet_id}"
+            
+            # Call the Wallet Service to get the balance
+            response = requests.get(wallet_url)
+            
+            # Check the response from the wallet service
+            if response.status_code == 200:
+                balance = response.json().get('balance')
+                
+                print(balance)
+                # Check if balance is insufficient
+                if balance < job_data['job']['price']:
+                    raise ValueError("Wallet error: Insufficient balance")
+            else:
+                return jsonify({"error": f"Failed to fetch wallet balance. Status Code: {response.status_code}"}), response.status_code
+
+        except requests.exceptions.RequestException as e:
+            # Catch request-related errors
+            return jsonify({"error": f"Error calling wallet service: {str(e)}"}), 500
+
+        except ValueError as e:
+            # Catch the "Insufficient balance" error
+            return jsonify({"error": str(e)}), 400  # Return 400 Bad Request for insufficient balance
+
+
+
+        #####3. CALLING CHATGPT MICROSERVICE######
         try:
             chatgpt_url = f"{CHATGPT_SERVICE_URL}/generate-job-description"
             chatgpt_response = requests.post(
@@ -104,10 +146,12 @@ def create_job_listing():
             return jsonify({"error": "Failed to process job listing due to CGPT failure"}), 500
         
 
-        #####3. CALLING JOB RECORD MICROSERVICE######
+
+        #####4. CALLING JOB RECORD MICROSERVICE######
         try:
             jobrecord_url = f"{JOBRECORD_SERVICE_URL}/job"
             job_data['job']['description'] = job_description['description']
+            print(job_data['job'])
             jobrecord_response = requests.post(
                 jobrecord_url, 
                 json={
