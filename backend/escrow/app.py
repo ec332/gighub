@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 class Escrow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employer_id = db.Column(db.Integer, nullable=False)
-    freelancer_id = db.Column(db.Integer, nullable=True)
+    freelancer_id = db.Column(db.Integer, nullable=False)
     job_id = db.Column(db.Integer, nullable=False)
     amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="Pending")  # "Pending", "Released", "Cancelled"
@@ -60,7 +60,7 @@ def accept_job():
     
     # Validate required fields
     if not data or "job_id" not in data or "freelancer_id" not in data:
-        return jsonify({"error": "Missing required fields: job_id and freelancer_id"}), 400
+        return jsonify({"error": "Missing required fields: job_id and freelancer_id"}), 404
 
     try:
         # Find the escrow record by job_id
@@ -94,7 +94,7 @@ def get_escrow(id):
         "data": {
             "escrow_id": escrow.id,
             "employer_id": escrow.employer_id,
-            # "freelancer_id": escrow.freelancer_id,
+            "freelancer_id": escrow.freelancer_id,
             "job_id": escrow.job_id,
             "amount": escrow.amount,
             "status": escrow.status,

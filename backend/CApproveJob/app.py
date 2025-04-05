@@ -9,7 +9,8 @@ CORS(app)
 # Update these URLs with actual service endpoints
 JOB_RECORD_UPDATE_URL = "http://localhost:5100/job/{job_id}"
 ESCROW_UPDATE_URL = "http://localhost:5200/escrow/{job_id}"
-WALLET_UPDATE_URL = "http://localhost:5300/wallet/{freelancer_id}"
+WALLET_UPDATE_URL = "http://localhost:5300/wallet/{wallet_id}"
+RETRIEVE_WALLET_URL = "https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/byid"
 
 # AMQP Configuration (Update this with actual credentials)
 AMQP_URL = "amqp://guest:guest@localhost:5672/"
@@ -93,7 +94,6 @@ def create_task():
     job_id = data["ID"]
     freelancer_id = data["FreelancerID"]
     amount = data["Price"]
-    wallet_id = data["wallet_id"]
 
     # Step 1: Update Job Record Status to 'completed'
     job_update_payload = {"job_id": job_id, "status": "completed"}
@@ -117,15 +117,30 @@ def create_task():
         log_error_to_kafka(str(e), topic="approve-job-errors")
         return jsonify({"error": "Failed to update escrow status", "details": str(e)}), 500
 
-    # Step 3: Transfer funds to freelancer's wallet
+    print("DONE")
+    #Send
+    try:
+        url = f"{RETRIEVE_WALLET_URL}/{freelancer_id}"
+        response = requests.get(url)
+        response.raise_for_status()  # raises HTTPError for bad status
+        data = response.json()
+        print(data)
+        wallet_id = data["Freelancer"]["WalletId"]
+    except Exception as e:
+        return jsonify({"error": "Failed to retrieve wallet ID", "message": str(e)}), 500
+
+    print(wallet_id)
+
+    # Step 2: Transfer funds to freelancer's wallet
     wallet_update_payload = {"amount": amount}
     try:
         wallet_response = requests.post(WALLET_UPDATE_URL.format(wallet_id=wallet_id), json=wallet_update_payload)
         wallet_response.raise_for_status()
     except requests.exceptions.RequestException as e:    
-    # Send error to your Flask error logging service
-        log_error_to_kafka(str(e), topic="approve-job-errors")
+        log_error_to_kafka(str(e), topic="approve-job-errors")  # Make sure this function is defined
         return jsonify({"error": "Failed to transfer funds to wallet", "details": str(e)}), 500
+
+    return jsonify({"message": "Payment processed successfully"}), 200
 
     # Step 4: Send AMQP Notification
     try:

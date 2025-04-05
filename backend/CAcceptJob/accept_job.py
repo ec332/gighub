@@ -16,7 +16,7 @@ CORS(app)  # Enable CORS
 
 # Configuration for external services
 JOB_SERVICE_URL = 'http://localhost:5100/job'
-ESCROW_SERVICE_URL = 'http://localhost:5200/escrow/freelancerid'
+ESCROW_SERVICE_URL = 'http://localhost:5200/escrow/acceptedjob'
 KAFKA_BROKER = 'localhost:29092'
 AMQP_URL = 'amqp://guest:guest@localhost:5672/' #update with actual credentials
 
@@ -45,7 +45,7 @@ def accept_job():
         employer_id = job_details.get('employer_id')
 
         # Step 4: Update freelancer ID in Escrow Service
-        job_response = requests.put(f'{ESCROW_SERVICE_URL}/escrow/acceptedjob', json={'job_id': job_id, 'freelancer_id' : freelancer_id})
+        job_response = requests.put(ESCROW_SERVICE_URL, json={'job_id': job_id, 'freelancer_id' : freelancer_id})
         if job_response.status_code != 200:
             raise Exception(f"Error updating job status: {job_response.text}")
         job_data = job_response.json()

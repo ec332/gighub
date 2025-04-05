@@ -207,11 +207,13 @@ def create_job_listing():
             # "job_record": job_record
         }), 201
     
-    except Exception as e:
-        # Catch-all for unexpected errors
-        error_message = f"Unexpected error in job listing creation: {str(e)}"
-        log_error_to_kafka(error_message, topic="publish-job-errors")
-        return jsonify({"error": "Internal server error"}), 500
+    # except Exception as e:
+    #     # Catch-all for unexpected errors
+    #     error_message = f"Unexpected error in job listing creation: {str(e)}"
+    #     log_error_to_kafka(error_message, topic="publish-job-errors")
+    #     return jsonify({"error": "Internal server error"}), 500
+    finally:
+        pass
 
 @app.errorhandler(500)
 def handle_500(error):

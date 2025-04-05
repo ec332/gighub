@@ -1,0 +1,64 @@
+Freelancer Login
+
+username: computersciencestudent@smu.edu.sg
+password: faang
+
+
+Employer Login
+
+username: aistartup@gmail.com
+password: gptwrapper
+
+
+**Freelancer DB**
+Id = 50
+Name = unemployedStudent
+Email = computersciencestudent@smu.edu.sg
+Gender = Male
+Skills = Python, Vim, Arch Linux, Academic Weapon, Java
+WalletId = 680
+
+``` SET ON OUTSYSTEMS ```
+
+
+**Employer DB**
+id = 100
+name = AIStartup
+email = aistartup@gmail.com
+company = AIStartup
+wallet_id = 320
+
+```
+INSERT INTO employer (id, name, email, company, wallet_id)
+VALUES (100, 'AIStartup', 'aistartup@gmail.com', 'AIStartup', 320)
+ON CONFLICT (email)
+DO UPDATE SET
+  id = EXCLUDED.id,
+  name = EXCLUDED.name,
+  company = EXCLUDED.company,
+  wallet_id = EXCLUDED.wallet_id;
+```
+
+
+Wallet DB
+WalletID = 680
+Role = Freelancer
+Balance = 1500 
+
+```
+INSERT INTO wallets ("WalletID", "Role", "Balance")
+VALUES (680, 'Freelancer', 1500.00);
+```
+
+
+WalletID = 320
+Role = Employer
+Balance = 2000
+
+```
+INSERT INTO wallets ("WalletID", "Role", "Balance")
+VALUES (320, 'Employer', 2000.00);
+```
+
+
+
