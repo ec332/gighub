@@ -1,5 +1,8 @@
 from flask import Flask, request, jsonify
-from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -7,26 +10,21 @@ app = Flask(__name__)
 def internal_server_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
-@app.route('/compliance/<int:job_id>', methods=['POST'])
-def submit_compliance_check(job_id):
+
+@app.route('/compliance', methods=['POST'])
+def submit_compliance_check():
     # Get job data directly from the POST request
     job_data = request.json.get("job")
 
     if not job_data:
         return jsonify({"error": "Invalid job data in request"}), 400
 
-    # Ensure the job_id in the URL matches the job_id in the payload
-    if job_data.get("id") != job_id:
-        return jsonify({"error": "Job ID in URL does not match job ID in payload"}), 400
-
     is_compliant, remarks = check_job_compliance(job_data)
 
     return jsonify({
         "message": "Compliance check completed",
         "compliance": {
-            "job_id": job_id,
             "is_compliant": is_compliant,
-            "checked_at": datetime.utcnow().isoformat(),
             "remarks": remarks
         }
     }), 201
@@ -47,10 +45,7 @@ def check_job_compliance(job):
         is_compliant = False
 
     # Rule 2: Category must be valid
-    valid_categories = {
-        "IT", "Finance", "Marketing", "Healthcare",
-        "Education", "Engineering", "Retail", "F&B", "Logistics"
-    }
+    valid_categories = {"IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering","Retail","F&B","Logistics"}
     if not job.get("category") or job["category"] not in valid_categories:
         remarks.append(f"Invalid category. Must be one of {valid_categories}.")
         is_compliant = False
@@ -61,7 +56,7 @@ def check_job_compliance(job):
         is_compliant = False
 
     # Rule 4: At least one skill must be listed
-    if not job.get("skills") or job["skills"].strip() == "":
+    if not isinstance(job.get("skills"), list) or not all(isinstance(skill, str) for skill in job["skills"]) or len(job["skills"]) == 0:
         remarks.append("At least one skill is required.")
         is_compliant = False
 
