@@ -7,47 +7,11 @@ import { useEffect, useState } from 'react';
 export default function EmployerDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  // const [jobs, setJobs] = useState([
-  //   {
-  //     id: '1',
-  //     title: 'UI/UX Designer',
-  //     description: 'testing how it will look w long desc Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam',
-  //     payRate: 35,
-  //     status: 'Closed',
-  //     skill:'Figma, CSS'
-  //   },
-  //   {
-  //     id: '2',
-  //     title: 'Temp Sales Assistant',
-  //     description: 'Sell perfume at Perfume Fair',
-  //     payRate: 20,
-  //     status: 'Open',
-  //     skill:'Sales'
-  //   },
-  //   {
-  //     id: '3',
-  //     title: 'Server',
-  //     description: 'Assist restaurant with service',
-  //     payRate: 22,
-  //     status: 'Open',
-  //     skill:'Hold tray'
-
-  //   }
-  // ]);
   const [employerInfo, setEmployerInfo] = useState({ id: '',name: '', email: '', company: '',wallet_id:'' });
-
-  const [walletBalance, setWalletBalance] = useState(150.75);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [jobs, setJobs] = useState([]);
   const [approvalJobs, setApprovalJobs] = useState([]);
-
   const [showNotifications, setShowNotifications] = useState(true);
-  // const [notifications, setNotifications] = useState([
-  //   'New application received for "Temp Sales Assistant".',
-  //   'Your job "Server" has been marked as completed.',
-  // ]);
-
-  // const [walletBalance, setWalletBalance] = useState(0);
-  // const [showNotifications, setShowNotifications] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -73,7 +37,6 @@ export default function EmployerDashboard() {
         console.error(error);
       }
     }
-    
     fetchEmployerInfo();
   }, [session, status, router]);
 
@@ -95,28 +58,36 @@ export default function EmployerDashboard() {
     fetchJobs();
   }, [employerInfo.id]);
 
-    // async function fetchApprovalJobs() {
-    //   try {
-    //     const response = await fetch('http://localhost:5500/pendingapproval?employerId=${employerInfo.id}');
-    //     if (!response.ok) throw new Error('Failed to fetch approval jobs');
-    //     const data = await response.json();
-    //     setApprovalJobs(data.jobs);
-    //     // console.log(data.jobs);
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }
+  useEffect(() => {
+    if (!employerInfo.id) return;
+    async function fetchApprovalJobs() {
+      try {
+        const response = await fetch(`http://localhost:5500/pendingapproval?employerId=${employerInfo.id}`);
+        if (!response.ok) throw new Error('Failed to fetch approval jobs');
+        const data = await response.json();
+        setApprovalJobs(data);
+        console.log(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchApprovalJobs();  
+  }, [employerInfo.id]);
 
-    // async function fetchWalletBalance() {
-    //   try {
-    //     const response = await fetch(`http://localhost:5300/wallet/<int:wallet_id>`);
-    //     if (!response.ok) throw new Error('Failed to fetch wallet balance');
-    //     const data = await response.json();
-    //     setWalletBalance(data.balance);
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }
+  useEffect(() => {
+    if (!employerInfo.id) return;
+    async function fetchWalletBalance() {
+      try {
+        const response = await fetch(`http://localhost:5300/wallet/${employerInfo.wallet_id}`);
+        if (!response.ok) throw new Error('Failed to fetch wallet balance');
+        const data = await response.json();
+        setWalletBalance(data.balance);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchWalletBalance();  
+  }, [employerInfo.wallet_id]);
 
     useEffect(() => {
       if (!employerInfo.id) return;
@@ -131,17 +102,50 @@ export default function EmployerDashboard() {
           console.error(error);
         }
       }
-    
       fetchNotifications();
     }, [employerInfo.id]);
-
-    // fetchApprovalJobs();
-    // fetchWalletBalance();
 
   const handleAcknowledge = () => {
     setShowNotifications(false);
   };
 
+  const handleReleasePayment = async (jobId) => {
+    try {
+      // Step 1: Fetch the job details using the jobId
+      const jobResponse = await fetch(`http://localhost:5100/job/${jobId}`);
+      if (!jobResponse.ok) throw new Error('Failed to fetch job details');
+      const jobData = await jobResponse.json();
+      console.log(jobData);
+      
+      // Extract freelancer ID and price from the fetched job data
+      const freelancerId = jobData.job.freelancer_id;
+      const price = jobData.job.price;
+  
+      // Step 2: Call the payment release endpoint
+      const paymentResponse = await fetch('http://localhost:5000/approve-job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ID: jobId,
+          FreelancerID: freelancerId,
+          Price: price,
+        }),
+      });
+  
+      const paymentData = await paymentResponse.json();
+  
+      if (!paymentResponse.ok) throw new Error(paymentData.error || 'Failed to release payment');
+  
+      alert('Payment Released Successfully');
+      setApprovalJobs(approvalJobs.filter(job => job.jobId !== jobId)); // Remove the job from approval
+    } catch (error) {
+      console.error('Error releasing payment:', error);
+      alert('Error releasing payment');
+    }
+  };
+  
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
@@ -212,7 +216,7 @@ export default function EmployerDashboard() {
             <div key={job.id} className="bg-white p-4 shadow rounded-lg">
               <h3 className="text-xl font-semibold">{job.title}</h3>
               <p className="text-sm text-gray-600 overflow-hidden overflow-ellipsis whitespace-nowrap">Job Description: {job.description}</p>
-              <p className="text-sm text-gray-600">Pay Rate: ${job.price}/hr</p>
+              <p className="text-sm text-gray-600">Pay: ${job.price}</p>
               <p className="text-sm text-gray-600">Status: {job.status}</p>
               <button className="text-sm underline text-[#1860F1] hover:text-[#BBEF5D]">Edit Job</button>
             </div>
@@ -227,16 +231,19 @@ export default function EmployerDashboard() {
         {approvalJobs.length === 0 ? (
           <p className="mt-4 text-gray-500 bg-white p-4 shadow rounded-lg">No approval listings yet.</p>
         ) : (
-          approvalJobs.slice(0, 2).map((job, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {approvalJobs.map((job, index) => (
             <div key={`approval-${index}`} className="bg-white p-4 shadow rounded-lg">
-              <h3 className="text-xl font-semibold">{job.title}</h3>
-              <p className="text-sm text-gray-600">Job ID: {job.jobId}</p>
-              {/* <p className="text-sm text-gray-600">Date Completed: {job.completedDate}</p> */}
-              <button className="text-sm underline text-[#1860F1] hover:text-[#BBEF5D]">Release Payment</button>
+              <h3 className="text-lg font-semibold">Job #{job.jobId}</h3>
+              <p className="text-sm text-gray-600">Employer ID: {job.employerId}</p>
+              <button className="mt-2 text-sm underline text-[#1860F1] hover:text-[#BBEF5D]" onClick={() => handleReleasePayment(job.jobId)}
+              >
+                Release Payment
+              </button>
             </div>
-          ))
-        )}
+          ))}
       </div>
+        )}
     </div>
-  );
-}
+  </div>
+  )}

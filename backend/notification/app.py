@@ -7,16 +7,23 @@ CORS(app)
 
 RABBITMQ_HOST = "rabbitmq"
 
-@app.route('/consume_notifications/<int:user_id>', methods=['GET'])
-def consume_and_get_notifications(user_id):
+@app.route('/consume_notifications/<string:usertype>/<int:user_id>', methods=['GET'])
+def consume_and_get_notifications(usertype, user_id):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
 
-    queue_names = [
-        f"{user_id}-payment-notification",
-        f"{user_id}-job-accept-notification",
-        f"{user_id}-job-completion-notification"
-    ]
+    # Select queue names based on user type
+    if usertype.lower() == "employer":
+        queue_names = [
+            f"{user_id}-job-accept-notification",
+            f"{user_id}-job-completion-notification"
+        ]
+    elif usertype.lower() == "freelancer":
+        queue_names = [
+            f"{user_id}-payment-notification"
+        ]
+    else:
+        return jsonify({"error": "Invalid user type"}), 400
 
     notifications = []
 
@@ -42,7 +49,7 @@ def consume_and_get_notifications(user_id):
 
     connection.close()
     return jsonify({
-        "status": f"Fetched {len(notifications)} notifications for user {user_id}",
+        "status": f"Fetched {len(notifications)} notifications for {usertype} {user_id}",
         "notifications": notifications
     }), 200
 

@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@db:5432/jobs_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
