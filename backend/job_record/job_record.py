@@ -83,7 +83,11 @@ def create_job():
         db.session.add(new_job)
         db.session.commit()
 
-        return jsonify({"message": "Job recorded successfully", "job": new_job.json()}), 201
+        return jsonify({
+            "message": "Job recorded successfully",
+            "job_id": new_job.id,
+            "job": new_job.json()
+        }), 201
 
     except Exception as e:
         return jsonify({"error": "Error while creating job", "details": str(e)}), 500
