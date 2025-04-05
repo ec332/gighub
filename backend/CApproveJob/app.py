@@ -3,9 +3,9 @@ from kafka import KafkaProducer
 import requests
 import pika
 import json
-
+from flask_cors import CORS
 app = Flask(__name__)
-
+CORS(app)
 # Update these URLs with actual service endpoints
 JOB_RECORD_UPDATE_URL = "http://localhost:5100/job/{job_id}"
 ESCROW_UPDATE_URL = "http://localhost:5200/escrow/{job_id}"

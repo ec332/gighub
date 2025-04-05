@@ -43,7 +43,7 @@ export default function CreateJob() {
         },
         body: JSON.stringify({
           job: {
-            id: jobId,
+            // id: jobId,
             employer_id: employerId,
             title,
             category,
@@ -59,7 +59,6 @@ export default function CreateJob() {
       if (!response.ok) {
         throw new Error(`Failed to post job: ${response.statusText}`);
       }
-
       alert('Job published successfully!');
       router.push('/employer/dashboard');
     } catch (error) {
@@ -119,7 +118,7 @@ export default function CreateJob() {
           />
         </label>
         <label className="block mb-4">
-          <span className="text-gray-700">Pay Rate (per hour)</span>
+          <span className="text-gray-700">Pay</span>
           <input
             type="number"
             value={price}
