@@ -61,7 +61,8 @@ export async function middleware(request: NextRequestWithAuth) {
       if (
         pathname === '/freelancer/dashboard' ||
         pathname === '/freelancer/create-profile' ||
-        pathname === '/freelancer/job-listings'
+        pathname === '/freelancer/job-listings' ||
+        pathname === '/freelancer/job-listings/carousel'
       ) {
         return NextResponse.next();
       }
@@ -78,7 +79,9 @@ export async function middleware(request: NextRequestWithAuth) {
       '/freelancer/dashboard',
       '/freelancer/create-profile',
       '/employer/create-profile',
-      '/employer/publish-job'
+      '/employer/publish-job', 
+      '/freelancer/job-listings',
+      '/freelancer/job-listings/carousel'
     ];
 
     if (!allowedPaths.includes(pathname)) {
