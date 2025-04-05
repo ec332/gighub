@@ -29,9 +29,23 @@ export default function CreateFreelancerProfile() {
       return;
     }
 
-    console.log('📤 Submitting form data to OutSystems:');
+    // Step 1: Create wallet with role "Freelancer"
+    const walletRes = await fetch('http://localhost:5300/wallet/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'Freelancer',
+      }),
+    });
+
+    if (!walletRes.ok) throw new Error('Failed to create wallet');
+    const walletData = await walletRes.json();
+    const walletId = walletData.wallet_id || walletData.id; // Adjust based on your API response
+
+    console.log('Submitting form data to OutSystems:');
     console.log({ ...formData, Email: email });
 
+    // Step 2: Create freelancer using the walletId
     const res = await fetch('https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -40,14 +54,15 @@ export default function CreateFreelancerProfile() {
         Email: email,
         Gender: formData.Gender,
         Skills: formData.Skills,
+        WalletId: walletId, 
       }),
     });
 
     if (res.ok) {
-      console.log('✅ Profile creation successful!');
+      console.log('Profile creation successful!');
       router.push('/freelancer/dashboard');
     } else {
-      console.error('❌ Failed to POST to OutSystems');
+      console.error('Failed to POST to OutSystems');
       alert('Failed to create profile. Please try again.');
     }
   };
