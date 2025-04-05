@@ -36,23 +36,46 @@ export default function CreateEmployerProfile() {
   
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-
-      const res = await fetch('http://localhost:5400/api/employer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.Name,
-          email: email,
-          company: formData.Company,
-        }),
-      });
-  
-      if (res.ok) {
-        router.push('/employer/dashboard');
-      } else {
-        alert('Failed to create profile. Please try again.');
+    
+      try {
+        // Step 1: Create wallet
+        const walletRes = await fetch('http://localhost:5400/wallet/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'Employer',
+          }),
+        });
+        
+    
+        if (!walletRes.ok) throw new Error('Failed to create wallet');
+        const walletData = await walletRes.json();
+        const walletId = walletData.walletId
+    
+        // Step 2: Create employer with walletId
+        const res = await fetch('http://localhost:5400/api/employer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.Name,
+            email: email,
+            company: formData.Company,
+            wallet: walletId,
+          }),
+        });
+    
+        if (res.ok) {
+          router.push('/employer/dashboard');
+        } else {
+          alert('Failed to create employer profile. Please try again.');
+        }
+    
+      } catch (err) {
+        console.error(err);
+        alert('Something went wrong. Please try again.');
       }
     };
+    
 
   if (status === 'loading') {
     return <div>Loading...</div>;

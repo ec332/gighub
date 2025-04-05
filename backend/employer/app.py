@@ -20,7 +20,7 @@ class Employer(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     company = db.Column(db.String(100), nullable=False)
-    wallet_id = db.Column(db.Integer, nullable=True)  # Assuming a Wallet model exists
+    wallet_id = db.Column(db.Integer)
 
     def __repr__(self):
         return f'<Employer {self.name}, {self.company}>'
