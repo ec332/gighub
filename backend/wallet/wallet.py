@@ -3,12 +3,15 @@ import decimal
 from decimal import Decimal
 import os
 from dotenv import load_dotenv
+from flask_cors import CORS  
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 # PostgreSQL configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:postgres@postgres:5432/wallet_service"
