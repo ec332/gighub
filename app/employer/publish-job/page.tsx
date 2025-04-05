@@ -42,23 +42,29 @@ export default function CreateJob() {
 
       const { employer_id, wallet_id } = employerInfo;
       const jobId = Math.floor(Date.now() / 1000);
+      const skillsArray = skills.split(',').map(skill => skill.trim()).filter(Boolean);
+      
+      const jobData = {
+        job: {
+          employer_id: employer_id,
+          title,
+          category,
+          skills:skillsArray,
+          price: parseFloat(price),
+          description,
+          wallet: wallet_id
+        },
+      };
+      
+      console.log('Posting job with data:', jobData);
+
+      
       const response = await fetch('http://localhost:5003/job-listing', {
         method: 'POST',
+        body: JSON.stringify(jobData),
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          job: {
-            // id: jobId,
-            employer_id: employer_id,
-            title,
-            category,
-            skills,
-            price,
-            description,
-            wallet_id: wallet_id
-          },
-        }),
+        }
       });
       console.log('Response status:', response.status);
       console.log('Response text:', await response.text());
