@@ -94,7 +94,7 @@ export default function EmployerDashboard() {
     
       async function fetchNotifications() {
         try {
-          const response = await fetch(`http://localhost:5800/consume_notifications/${employerInfo.id}`);
+          const response = await fetch(`http://localhost:5800/consume_notifications/employer/${employerInfo.id}`);
           if (!response.ok) throw new Error('Failed to fetch notifications');
           const data = await response.json();
           setNotifications(data.notifications || []);
@@ -166,9 +166,9 @@ export default function EmployerDashboard() {
                 </li>
               ))}
             </ul>
-          ) : (
+            ) : (
             <p className="text-gray-600 mb-4">No new notifications.</p>
-          )}
+              )}
             <button
               className="mt-2 w-full bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200 text-white px-4 py-2 rounded-md"
               onClick={handleAcknowledge}>Acknowledge</button>
