@@ -61,7 +61,8 @@ export default function FreelancerDashboard() {
         setJobs(jobsData.jobs || []);
 
         // Fetch wallet
-        const walletRes = await fetch(`http://localhost:5300/wallet/${wallet_id}`);
+        const walletId = freelancer?.WalletId;
+        const walletRes = await fetch(`http://localhost:5300/wallet/${walletId}`);
         const walletData = walletRes.ok ? await walletRes.json() : { balance: 0 };
         setWalletBalance(walletData.balance || 0); 
       } catch (err) {

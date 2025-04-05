@@ -40,7 +40,7 @@ export default function CreateFreelancerProfile() {
 
     if (!walletRes.ok) throw new Error('Failed to create wallet');
     const walletData = await walletRes.json();
-    const walletId = walletData.wallet_id || walletData.id; // Adjust based on your API response
+    const walletId = walletData.walletId; 
 
     console.log('Submitting form data to OutSystems:');
     console.log({ ...formData, Email: email });

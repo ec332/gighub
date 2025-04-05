@@ -49,6 +49,7 @@ def accept_job():
         pay = job_details.get('pay')
         
         # Step 1: Call the OutSystems Freelancer API for freelancer ID
+        #U MIGHT NOT NEED THIS FREELANCER ID MIGHT BE IN SESSION ALR
         print(f"Fetching freelancer details for email: {freelancer_email}")
         freelancer_response = requests.get(f'{FREELANCER_SERVICE_URL}/{freelancer_email}/')
         if freelancer_response.status_code != 200:
