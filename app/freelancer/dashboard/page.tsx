@@ -213,7 +213,7 @@ export default function FreelancerDashboard() {
 
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-semibold text-black">Wallet</h2>
-        <button className="px-4 py-2 rounded text-white font-medium bg-[#1860f1]">Withdraw</button>
+        <button className="px-4 py-2 rounded text-white font-medium transition-colors duration-200 bg-[#1860f1] hover:bg-[#bcef5d] hover:text-[#1860f1]">Withdraw</button>
       </div>
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
         <p className="text-gray-600 text-base">Balance: ${walletBalance?.toFixed(2) || '0.00'}</p>
