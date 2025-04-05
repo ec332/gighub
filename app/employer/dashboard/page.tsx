@@ -58,22 +58,59 @@ export default function EmployerDashboard() {
     fetchJobs();
   }, [employerInfo.id]);
 
+  // useEffect(() => {
+  //   if (!employerInfo.id) return;
+  //   async function fetchApprovalJobs() {
+  //     try {
+  //       const response = await fetch(`http://localhost:5500/pendingapproval?employerId=${employerInfo.id}`);
+  //       if (!response.ok) throw new Error('Failed to fetch approval jobs');
+  //       const data = await response.json();
+  //       setApprovalJobs(data);
+  //       console.log(data);
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   }
+  //   fetchApprovalJobs();  
+  // }, [employerInfo.id]);
   useEffect(() => {
     if (!employerInfo.id) return;
+  
     async function fetchApprovalJobs() {
       try {
         const response = await fetch(`http://localhost:5500/pendingapproval?employerId=${employerInfo.id}`);
         if (!response.ok) throw new Error('Failed to fetch approval jobs');
-        const data = await response.json();
-        setApprovalJobs(data);
-        console.log(data);
+        const approvalList = await response.json(); // list of jobs with jobId and employerId
+  
+        // Fetch full job info for each job in the approval list
+        const enrichedJobs = await Promise.all(
+          approvalList.map(async (job) => {
+            try {
+              const jobDetailResponse = await fetch(`http://localhost:5100/job/${job.jobId}`);
+              if (!jobDetailResponse.ok) throw new Error('Failed to fetch job detail');
+              const jobDetail = await jobDetailResponse.json();
+  
+              return {
+                ...job,
+                title: jobDetail.job.title,
+                price: jobDetail.job.price,
+              };
+            } catch (err) {
+              console.error(`Error fetching details for job ${job.jobId}:`, err);
+              return job; // fallback to original if detail fetch fails
+            }
+          })
+        );
+  
+        setApprovalJobs(enrichedJobs);
       } catch (error) {
         console.error(error);
       }
     }
-    fetchApprovalJobs();  
+  
+    fetchApprovalJobs();
   }, [employerInfo.id]);
-
+  
   useEffect(() => {
     if (!employerInfo.id) return;
     async function fetchWalletBalance() {
@@ -218,7 +255,6 @@ export default function EmployerDashboard() {
               <p className="text-sm text-gray-600 overflow-hidden overflow-ellipsis whitespace-nowrap">Job Description: {job.description}</p>
               <p className="text-sm text-gray-600">Pay: ${job.price}</p>
               <p className="text-sm text-gray-600">Status: {job.status}</p>
-              <button className="text-sm underline text-[#1860F1] hover:text-[#BBEF5D]">Edit Job</button>
             </div>
           ))}
         </div>
@@ -234,12 +270,13 @@ export default function EmployerDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {approvalJobs.map((job, index) => (
             <div key={`approval-${index}`} className="bg-white p-4 shadow rounded-lg">
-              <h3 className="text-lg font-semibold">Job #{job.jobId}</h3>
-              <p className="text-sm text-gray-600">Employer ID: {job.employerId}</p>
-              <button className="mt-2 text-sm underline text-[#1860F1] hover:text-[#BBEF5D]" onClick={() => handleReleasePayment(job.jobId)}
-              >
+              <h3 className="text-lg font-semibold">{job.title}</h3>
+              <p className="text-sm text-gray-600">Pay: ${job.price}</p>
+              <button
+                onClick={() => handleReleasePayment(job.jobId)}
+                className="mt-2 inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-[#28A745] border border-[#28A745] hover:bg-[#28A745] hover:text-white active:bg-[#218838] active:border-[#218838] focus:outline-none focus:ring-2 focus:ring-[#BBEF5D] focus:ring-offset-2 transition-all duration-200">
                 Release Payment
-                </button>
+              </button>
               </div>
             ))}
           </div>
