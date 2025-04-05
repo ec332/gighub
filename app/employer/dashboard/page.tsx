@@ -239,11 +239,12 @@ export default function EmployerDashboard() {
               <button className="mt-2 text-sm underline text-[#1860F1] hover:text-[#BBEF5D]" onClick={() => handleReleasePayment(job.jobId)}
               >
                 Release Payment
-              </button>
-            </div>
-          ))}
-      </div>
+                </button>
+              </div>
+            ))}
+          </div>
         )}
-    </div>
-  </div>
-  )}
+      </div>
+    </div> // main container
+  );
+}
