@@ -168,7 +168,27 @@ setShowNotifications(false);
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  /*if (loading) return <div>Loading...</div>; */
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 flex-col space-y-4">
+        <motion.div
+          transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+        >
+          <Image
+            src={doveIcon}
+            alt="Loading Dove"
+            width={64}
+            height={64}
+            className="drop-shadow-md"
+          />
+        </motion.div>
+        <p className="text-lg font-semibold text-[#1860f1] animate-pulse">Loading...</p>
+      </div>
+    );
+  }
+  
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
@@ -180,6 +200,9 @@ setShowNotifications(false);
             <ul className="list-disc pl-5 mb-4">
               {notifications.map((n, i) => <li key={i} className="text-gray-700">{n}</li>)}
             </ul>
+            {notifications.length == 0 && (
+              <p className="text-gray-600 mb-4">No new notifications.</p>
+            )}
             <button
               className="mt-2 w-full bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] text-white px-4 py-2 rounded-md"
               onClick={handleAcknowledge}
@@ -240,7 +263,7 @@ setShowNotifications(false);
             <input type="text" name="Name" value={editedProfile?.Name || ''} onChange={handleProfileChange} className="w-full p-2 border rounded" />
             <input type="text" name="Gender" value={editedProfile?.Gender || ''} onChange={handleProfileChange} className="w-full p-2 border rounded" />
             <input type="text" name="Skills" value={editedProfile?.Skills || ''} onChange={handleProfileChange} className="w-full p-2 border rounded" />
-            <button className="mt-2 px-4 py-2 rounded text-white font-medium bg-[#1860f1]" onClick={handleSaveProfile}>Save</button>
+            <button className="mt-2 px-4 py-2 rounded text-white font-medium bg-[#1860f1] hover:bg-[#bcef5d] hover:text-[#1860f1] transition-colors duration-200" onClick={handleSaveProfile}>Save</button>
           </>
         ) : (
           <>
