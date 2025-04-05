@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 class Escrow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employer_id = db.Column(db.Integer, nullable=False)
-    freelancer_id = db.Column(db.Integer, nullable=False)
+    freelancer_id = db.Column(db.Integer, nullable=True)
     job_id = db.Column(db.Integer, nullable=False)
     amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="Pending")  # "Pending", "Released", "Cancelled"
@@ -27,24 +27,30 @@ class Escrow(db.Model):
 def create_escrow():
     data = request.get_json()
     employer_id = data.get("employer_id")
-    freelancer_id = data.get("freelancer_id")
     job_id = data.get("job_id")
     amount = data.get("amount")
+    freelancer_id = data.get("freelancer_id")  # Optional
 
-    if not all([employer_id, freelancer_id, job_id, amount]):
+    if not all([employer_id, job_id, amount]):
         return jsonify({"message": "Missing required fields"}), 400
     
     if not isinstance(amount, (int, float)) or amount <= 0:
         return jsonify({"message": "Amount must be a positive number"}), 400
 
     new_escrow = Escrow(
-        employer_id=employer_id, freelancer_id=freelancer_id, 
-        job_id=job_id, amount=amount
+        employer_id=employer_id, 
+        freelancer_id=freelancer_id,  # Can be None
+        job_id=job_id, 
+        amount=amount
     )
     db.session.add(new_escrow)
     db.session.commit()
 
-    return jsonify({"message": "Escrow created", "escrow_id": new_escrow.id, "status": new_escrow.status}), 201
+    return jsonify({
+        "message": "Escrow created", 
+        "escrow_id": new_escrow.id, 
+        "status": new_escrow.status
+    }), 201
 
 # Retrieve Escrow
 @app.route('/escrow/<int:id>', methods=['GET'])
@@ -94,6 +100,6 @@ def update_escrow(id):
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)), debug=True)
+    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5200)), debug=True)
 
 
