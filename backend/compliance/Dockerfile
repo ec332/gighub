@@ -4,7 +4,6 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN apt update && apt install -y default-mysql-client
 RUN apt update && apt install -y curl
 
 COPY requirements.txt requirements.txt

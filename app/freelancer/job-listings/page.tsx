@@ -101,7 +101,7 @@ export default function JobListings() {
         <p className="mt-4 text-gray-500">No matched jobs found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          {jobs.map((job) => (
+          {jobs.filter((job) => job.status === 'hiring').map((job) => (
             <div
               key={job.id}
               className="bg-white p-5 rounded-lg shadow border border-gray-200 hover:shadow-lg transition-shadow space-y-2"
