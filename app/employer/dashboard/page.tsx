@@ -62,21 +62,6 @@ export default function EmployerDashboard() {
     fetchJobs();
   }, [employerInfo.id]);
 
-  // useEffect(() => {
-  //   if (!employerInfo.id) return;
-  //   async function fetchApprovalJobs() {
-  //     try {
-  //       const response = await fetch(`http://localhost:5500/pendingapproval?employerId=${employerInfo.id}`);
-  //       if (!response.ok) throw new Error('Failed to fetch approval jobs');
-  //       const data = await response.json();
-  //       setApprovalJobs(data);
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   }
-  //   fetchApprovalJobs();  
-  // }, [employerInfo.id]);
   useEffect(() => {
     if (!employerInfo.id) return;
   
@@ -161,6 +146,13 @@ export default function EmployerDashboard() {
       // Extract freelancer ID and price from the fetched job data
       const freelancerId = jobData.job.freelancer_id;
       const price = jobData.job.price;
+
+      const freelancerResponse = await fetch(`https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/byid/${freelancerId}`);
+      if (!freelancerResponse.ok) throw new Error('Failed to fetch freelancer details');
+      const freelancerData = await freelancerResponse.json();
+      const walletId = freelancerData.Freelancer.WalletId;
+      
+      console.log(walletId);
   
       // Step 2: Call the payment release endpoint
       const paymentResponse = await fetch('http://localhost:5000/approve-job', {
@@ -172,7 +164,7 @@ export default function EmployerDashboard() {
           ID: jobId,
           FreelancerID: freelancerId,
           Price: price,
-          
+          wallet_id: walletId
         }),
       });
   
@@ -187,10 +179,32 @@ export default function EmployerDashboard() {
       alert('Error releasing payment');
     }
   };
-  
-  /* if (status === 'loading') {
-    return <div>Loading...</div>;
-  } */
+  const handleTopUp = async () => {
+    try {
+      const amount = prompt('Enter the amount to top up:', '0');
+      if (!amount || isNaN(amount) || Number(amount) <= 0) {
+        alert('Please enter a valid amount.');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5300/wallet/${employerInfo.wallet_id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: Number(amount) }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to top up wallet');
+      alert('Wallet topped up successfully');
+      setWalletBalance(data.balance);  // Update the wallet balance after successful top-up
+    } catch (error) {
+      console.error('Error during top-up:', error);
+      alert('Error during top-up');
+    }
+  };
+
 
     if (status === 'loading') {
       return (
@@ -270,14 +284,21 @@ export default function EmployerDashboard() {
 
 
       {/* wallet balance */}
-      <div className='wallet'>
+      <div className="wallet">
         <div className="mt-6 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-black">Wallet</h2>
+          <button
+            onClick={handleTopUp}
+            className="text-white px-4 py-2 rounded-md bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200"
+          >
+            Top Up
+          </button>
         </div>
         <div className="bg-white shadow rounded-lg p-4 mt-2">
           <p className="text-gray-500">Balance: ${walletBalance}</p>
         </div>
       </div>
+
 
       {/* job listings */}
       <div className='job-listing'>

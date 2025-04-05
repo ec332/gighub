@@ -16,7 +16,7 @@ CORS(app)  # Enable CORS
 
 # Configuration for external services
 JOB_SERVICE_URL = 'http://localhost:5100/job'
-ESCROW_SERVICE_URL = 'http://localhost:5200/escrow/freelancerid'
+ESCROW_SERVICE_URL = 'http://localhost:5200/'
 KAFKA_BROKER = 'localhost:29092'
 AMQP_URL = 'amqp://guest:guest@localhost:5672/' #update with actual credentials
 
