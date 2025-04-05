@@ -17,11 +17,8 @@ CORS(app)  # Enable CORS
 # Configuration for external services
 JOB_SERVICE_URL = 'http://localhost:5100/job'
 ESCROW_SERVICE_URL = 'http://localhost:5200/escrow/freelancerid'
-WALLET_SERVICE_URL = 'http://localhost:5300/wallet'
 KAFKA_BROKER = 'localhost:29092'
 AMQP_URL = 'amqp://guest:guest@localhost:5672/' #update with actual credentials
-FREELANCER_SERVICE_URL = "https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer"
-EMPLOYER_SERVICE_URL = 'http://localhost:5400/api/employer'
 
 # Initialize Kafka Producer
 producer = KafkaProducer(
