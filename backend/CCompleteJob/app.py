@@ -58,7 +58,7 @@ def send_job_complete_notification(employer_id, job_id):
         message = {
             "freelancer_id": employer_id,
             "job_id": job_id,
-            "message": "Job has been completed"
+            "message": f"Job {job_id} has been completed!"
         }
         message_body = json.dumps(message)
 

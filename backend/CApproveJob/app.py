@@ -46,7 +46,7 @@ def send_payment_notification(freelancer_id, amount):
         channel.exchange_declare(exchange=EXCHANGE_NAME, exchange_type="topic", durable=True)
 
         # Define dynamic routing key and queue name
-        routing_key = f"{freelancer_id}-job-accept-notification"
+        routing_key = f"{freelancer_id}-payment-notification"
         queue_name = routing_key  # Queue name matches the routing key
 
         # Ensure the queue exists
@@ -140,7 +140,7 @@ def create_task():
         log_error_to_kafka(str(e), topic="approve-job-errors")  # Make sure this function is defined
         return jsonify({"error": "Failed to transfer funds to wallet", "details": str(e)}), 500
 
-    return jsonify({"message": "Payment processed successfully"}), 200
+    # return jsonify({"message": "Payment processed successfully"}), 200
 
     # Step 4: Send AMQP Notification
     try:

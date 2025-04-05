@@ -113,7 +113,17 @@ export default function FreelancerDashboard() {
         const response = await fetch(`http://localhost:5800/consume_notifications/freelancer/${profile.Id}`);
         if (!response.ok) throw new Error('Failed to fetch notifications');
         const data = await response.json();
-        setNotifications(data.notifications || []);
+        console.log(data);
+        const parsedNotifications = (data.notifications || []).map(n => {
+          try {
+            return typeof n === 'string' ? JSON.parse(n) : n;
+          } catch (err) {
+            console.error('Failed to parse notification:', n, err);
+            return null;
+          }
+        }).filter(n => n !== null);
+        
+        setNotifications(parsedNotifications);
       } catch (error) {
         console.error(error);
       }
@@ -198,7 +208,7 @@ setShowNotifications(false);
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
             <h2 className="text-2xl font-bold mb-4">New Notifications</h2>
             <ul className="list-disc pl-5 mb-4">
-              {notifications.map((n, i) => <li key={i} className="text-gray-700">{n}</li>)}
+              {notifications.map((n, i) => <li key={i} className="text-gray-700">{n.message}</li>)}
             </ul>
             {notifications.length == 0 && (
               <p className="text-gray-600 mb-4">No new notifications.</p>
@@ -319,7 +329,7 @@ setShowNotifications(false);
                   </a>
                   {['pending approval', 'completed', 'finished'].includes(job.status.toLowerCase()) ? (
                     <button
-                      className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded cursor-default"
+                      className="px-4 py-2 text-sm font-semibold text-[#1860F1] bg-[#BBEF5D] rounded cursor-default"
                       disabled
                     >
                       Completed
