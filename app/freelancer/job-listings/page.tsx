@@ -50,7 +50,7 @@ export default function JobListings() {
   // Function to handle accepting a job
   const handleAcceptJob = async (job: Job) => {
     try {
-      const res = await fetch('http://localhost:5002/acceptjob', {
+      const res = await fetch('http://localhost:5006/acceptjob', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
