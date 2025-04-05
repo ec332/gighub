@@ -49,6 +49,7 @@ export default function FreelancerDashboard() {
         );
         const profileData = await profileRes.json();
         const freelancer = profileData.Freelancer;
+        const wallet_id = profileData.Freelancer.WalletId;
 
         setProfile(freelancer || null);
         setEditedProfile(freelancer || null);
@@ -60,9 +61,9 @@ export default function FreelancerDashboard() {
         setJobs(jobsData.jobs || []);
 
         // Fetch wallet
-        const walletRes = await fetch(`http://localhost:5300/wallet?freelancer_id=${freelancerId}`);
+        const walletRes = await fetch(`http://localhost:5300/wallet/${wallet_id}`);
         const walletData = walletRes.ok ? await walletRes.json() : { balance: 0 };
-        setWalletBalance(walletData.balance || 0);
+        setWalletBalance(walletData.balance || 0); 
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
       } finally {
