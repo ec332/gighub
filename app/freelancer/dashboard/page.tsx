@@ -231,14 +231,14 @@ export default function FreelancerDashboard() {
               <div key={job.id} className="bg-white border rounded-lg p-3 shadow hover:shadow-md transition flex flex-col justify-between min-h-[150px]">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">{job.title}</h3>
-                  <p className="text-gray-600 text-sm"> Status: {job.status.toLowerCase() == "finished" ? "Applied" : job.status.toLowerCase() == "pending approval" ? "Pending Approval" : job.status}</p>
+                  <p className="text-gray-600 text-sm"> Status: {job.status.toLowerCase() == "close" ? "Applied" : job.status.toLowerCase() == "pending approval" ? "Pending Approval" : job.status}</p>
                   <p className="text-gray-600 text-sm">Price: ${job.price.toFixed(2)}</p>
                 </div>
                 <div className="mt-auto flex justify-between items-center pt-2">
-                  <a href={`/job/${job.id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:text-green-600">View Listing</a>
+                  <a href={`${window.location.origin}/freelancer/job-listings`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:text-green-600">View Listing</a>
                   {job.status.toLowerCase() === "pending approval" ? (
                     <button
-                      className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] cursor-default"
+                      className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded cursor-default"
                       disabled
                     >
                       Completed
