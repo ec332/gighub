@@ -1,36 +1,41 @@
 from flask import Flask, request, jsonify
 import decimal
-from pymongo import MongoClient
-from bson.decimal128 import Decimal128
 from decimal import Decimal
-from bson.objectid import ObjectId
 import os
 from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 
-# MongoDB configuration
-# MONGO_URI = env.MONGODB_URI
-# DB_NAME = "wallet_service"
-# COLLECTION_NAME = "wallets"
-MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
-DB_NAME = os.getenv("DB_NAME", "wallet_service")
-COLLECTION_NAME = os.getenv("COLLECTION_NAME", "wallets")
+# PostgreSQL configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:postgres@postgres:5432/wallet_service"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Get MongoDB client
-client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-wallet_collection = db[COLLECTION_NAME]
+# Set up SQLAlchemy
+db = SQLAlchemy(app)
 
-# Helper functions for Decimal conversion
-def decimal_to_decimal128(dec_value):
-    return Decimal128(dec_value)
+# Define Wallet model
+class Wallet(db.Model):
+    __tablename__ = 'wallets'
+    
+    WalletID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Role = db.Column(db.String(50), nullable=False)
+    Balance = db.Column(db.Numeric(precision=18, scale=2), nullable=False, default=0.00)
+    
+    # Add to_dict method for serialization
+    def to_dict(self):
+        return {
+            "walletId": self.WalletID,
+            "role": self.Role,
+            "balance": float(self.Balance)
+        }
 
-def decimal128_to_decimal(dec128_value):
-    return Decimal(str(dec128_value))
+# Create tables
+with app.app_context():
+    db.create_all()
 
 @app.route('/wallet/<int:wallet_id>', methods=['GET'])
 def get_wallet_balance(wallet_id):
@@ -38,20 +43,12 @@ def get_wallet_balance(wallet_id):
     Get the balance of a wallet by ID
     """
     try:
-        # Find wallet by ID
-        wallet = wallet_collection.find_one({"WalletID": wallet_id})
+        wallet = Wallet.query.filter_by(WalletID=wallet_id).first()
         
         if not wallet:
             return jsonify({"error": "Wallet not found"}), 404
         
-        # Convert Decimal128 to regular decimal for JSON serialization
-        balance = decimal128_to_decimal(wallet['Balance'])
-        
-        return jsonify({
-            "walletId": wallet['WalletID'],
-            "role": wallet['Role'],
-            "balance": float(balance)
-        })
+        return jsonify(wallet.to_dict())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -71,13 +68,12 @@ def update_wallet_balance(wallet_id):
         
         amount = Decimal(str(data['amount']))
         
-        # Find wallet by ID
-        wallet = wallet_collection.find_one({"WalletID": wallet_id})
+        wallet = Wallet.query.filter_by(WalletID=wallet_id).first()
         
         if not wallet:
             return jsonify({"error": "Wallet not found"}), 404
         
-        current_balance = decimal128_to_decimal(wallet['Balance'])
+        current_balance = wallet.Balance
         new_balance = current_balance + amount
         
         # If withdrawal, check if sufficient balance
@@ -85,66 +81,59 @@ def update_wallet_balance(wallet_id):
             return jsonify({"error": "Insufficient balance"}), 400
         
         # Update balance
-        result = wallet_collection.update_one(
-            {"WalletID": wallet_id},
-            {"$set": {"Balance": decimal_to_decimal128(new_balance)}}
-        )
-        
-        if result.modified_count == 0:
-            return jsonify({"error": "Failed to update balance"}), 500
+        previous_balance = float(wallet.Balance)
+        wallet.Balance = new_balance
+        db.session.commit()
             
-        return jsonify({
+        result = {
             "walletId": wallet_id,
-            "role": wallet['Role'],
-            "previousBalance": float(current_balance),
+            "role": wallet.Role,
+            "previousBalance": previous_balance,
             "newBalance": float(new_balance),
             "amount": float(amount)
-        })
+        }
+        
+        return jsonify(result)
     except decimal.InvalidOperation:
         return jsonify({"error": "Invalid amount format"}), 400
     except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-# Helper route to initialize a wallet (for testing)
+# Route to create a wallet (now uses autoincrement)
 @app.route('/wallet/create', methods=['POST'])
 def create_wallet():
     """
-    Create a new wallet
+    Create a new wallet.
     Request body should contain:
     {
-        "walletId": int,
-        "role": string ("Employer" or "Freelancer"),
-        "balance": float
+        "role": string ("Employer" or "Freelancer")
     }
+    Automatically initializes balance to 0.0 and generates a unique walletId via autoincrement.
     """
     try:
         data = request.get_json()
-        
-        if not all(key in data for key in ['walletId', 'role', 'balance']):
-            return jsonify({"error": "Missing required fields"}), 400
-            
+
+        # Validate presence of role
+        if 'role' not in data:
+            return jsonify({"error": "Missing required field: role"}), 400
+
         if data['role'] not in ['Employer', 'Freelancer']:
             return jsonify({"error": "Role must be 'Employer' or 'Freelancer'"}), 400
+
+        new_wallet = Wallet(Role=data['role'], Balance=Decimal('0.0'))
+        db.session.add(new_wallet)
+        db.session.commit()
         
-        # Check if wallet already exists
-        existing_wallet = wallet_collection.find_one({"WalletID": data['walletId']})
-        if existing_wallet:
-            return jsonify({"error": "Wallet with this ID already exists"}), 409
-        
-        # Create new wallet document
-        new_wallet = {
-            "WalletID": data['walletId'],
-            "Role": data['role'],
-            "Balance": decimal_to_decimal128(Decimal(str(data['balance'])))
-        }
-        
-        result = wallet_collection.insert_one(new_wallet)
-        
+        wallet_id = new_wallet.WalletID
+
         return jsonify({
             "message": "Wallet created successfully",
-            "walletId": data['walletId']
+            "walletId": wallet_id
         }), 201
+
     except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

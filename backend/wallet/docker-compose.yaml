@@ -1,14 +1,35 @@
 version: '3.8'
 
 services:
-  wallet-service:
+  wallet-api:
     build: .
     ports:
-      - "5300:5000" 
+      - "5300:5000"
     environment:
-      FLASK_APP: wallet.py
-      FLASK_ENV: production
-      PYTHONUNBUFFERED: 1
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/wallet_service
+      - FLASK_ENV=development
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - wallet-network
+
+  postgres:
+    image: postgres:13
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wallet_service
     volumes:
-      - .:/app 
-    command: ["gunicorn", "--bind", "0.0.0.0:5000", "wallet:app"]
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - wallet-network
+
+networks:
+  wallet-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
