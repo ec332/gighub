@@ -40,10 +40,11 @@ export default function CreateFreelancerProfile() {
 
     if (!walletRes.ok) throw new Error('Failed to create wallet');
     const walletData = await walletRes.json();
-    const walletId = walletData.walletId; 
+    const walletId = walletData.walletId 
 
     console.log('Submitting form data to OutSystems:');
     console.log({ ...formData, Email: email });
+    console.log(walletId);
 
     // Step 2: Create freelancer using the walletId
     const res = await fetch('https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/', {
@@ -54,8 +55,8 @@ export default function CreateFreelancerProfile() {
         Email: email,
         Gender: formData.Gender,
         Skills: formData.Skills,
-        WalletId: walletId, 
-      }),
+        WalletId: walletId
+      })
     });
 
     if (res.ok) {
