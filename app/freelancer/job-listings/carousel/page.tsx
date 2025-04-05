@@ -30,7 +30,7 @@ export default function JobCarousel() {
 
   useEffect(() => {
     if (!email) return;
-
+  
     async function fetchJobs() {
       try {
         const res = await fetch('http://localhost:5001/matchjob', {
@@ -40,75 +40,110 @@ export default function JobCarousel() {
           },
           body: JSON.stringify({ freelancer_email: email }),
         });
-
+  
         if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
         const data = await res.json();
-        setJobs(data.jobs || []);
+  
+        // ✅ Filter only hiring jobs
+        const hiringJobs = (data.jobs || []).filter((job: Job) => job.status === 'hiring');
+        setJobs(hiringJobs);
       } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     }
-
+  
     fetchJobs();
   }, [email]);
+  
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!jobs.length) return;
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if (!jobs.length || !email) return;
+
+      const job = jobs[currentIndex];
 
       if (e.key === 'ArrowLeft') {
-        console.log(`❌ Rejected job: ${jobs[currentIndex].id}`);
+        console.log(`❌ Rejected job: ${job.id}`);
         setShowRejectPopup(true);
         setTimeout(() => setShowRejectPopup(false), 1500);
         goNext();
       }
 
-      if (e.key === 'ArrowRight') {
-        console.log(`✅ Accepted job: ${jobs[currentIndex].id}`);
+      if (e.key === 'ArrowRight' && job.status !== 'close') {
+        console.log(`✅ Accepting job: ${job.id}`);
         setShowAcceptPopup(true);
         setTimeout(() => setShowAcceptPopup(false), 1500);
-        acceptJob(jobs[currentIndex]);
+        await handleAcceptJob(job);
         goNext();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [jobs, currentIndex]);
+  }, [jobs, currentIndex, email]);
 
   const goNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, jobs.length - 1));
+    let nextIndex = currentIndex + 1;
+
+    if (nextIndex >= jobs.length) {
+      nextIndex = 0;
+    }
+
+    let attempts = 0;
+    while (jobs[nextIndex]?.status === 'close' && attempts < jobs.length) {
+      nextIndex = (nextIndex + 1) % jobs.length;
+      attempts++;
+    }
+
+    setCurrentIndex(nextIndex);
   };
 
-  const acceptJob = async (job: Job) => {
+  const handleAcceptJob = async (job: Job) => {
     try {
-      const res = await fetch('http://localhost:5001/acceptjob', {
+      const res = await fetch('http://localhost:5002/acceptjob', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          freelancer_email: email,
+          employer_id: job.employer_id,
           job_id: job.id,
+          pay: job.price,
+          freelancer_email: email,
         }),
       });
 
-      if (!res.ok) throw new Error(`Failed to accept job: ${res.status}`);
-      console.log(`Successfully accepted job: ${job.title}`);
-    } catch (err) {
-      console.error(err);
+      if (!res.ok) {
+        throw new Error(`Failed to accept job: ${res.statusText}`);
+      }
+
+      const responseData = await res.json();
+      alert(responseData.message);
+
+      setJobs((prevJobs) =>
+        prevJobs.map((j) =>
+          j.id === job.id ? { ...j, status: 'close' } : j
+        )
+      );
+    } catch (err: any) {
+      console.error('Error accepting job:', err.message);
+      alert('Failed to accept job. Please try again.');
     }
   };
 
   if (loading) return <div className="p-8">Loading jobs...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
-  if (!jobs.length || currentIndex >= jobs.length) {
+  if (!jobs.length || jobs.every((job) => job.status === 'close')) {
     return <div className="p-8 text-gray-500">No more jobs to display.</div>;
   }
 
+  const job = jobs[currentIndex];
+
   return (
     <div className="relative min-h-screen bg-gray-100 flex flex-col items-center justify-center py-10 px-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Job Listings Carousel</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Job Listings</h1>
 
       {showRejectPopup && (
         <div className="absolute top-10 z-50 px-6 py-3 bg-red-500 text-white rounded-full shadow-lg animate-fadeOut">
@@ -125,6 +160,7 @@ export default function JobCarousel() {
       <div className="w-full max-w-2xl flex justify-center items-center">
         <Carousel
           selectedItem={currentIndex}
+          transitionTime={400}
           showThumbs={false}
           showStatus={false}
           showArrows={false}
