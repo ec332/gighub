@@ -106,19 +106,20 @@ export default function EmployerDashboard() {
     fetchApprovalJobs();
   }, [employerInfo.id]);
   
-  useEffect(() => {
-    if (!employerInfo.id) return;
-    async function fetchWalletBalance() {
-      try {
-        const response = await fetch(`http://localhost:5300/wallet/${employerInfo.wallet_id}`);
-        if (!response.ok) throw new Error('Failed to fetch wallet balance');
-        const data = await response.json();
-        setWalletBalance(data.balance);
-      } catch (error) {
-        console.error(error);
-      }
+  const fetchWalletBalance = async () => {
+    if (!employerInfo.wallet_id) return;
+    try {
+      const response = await fetch(`http://localhost:5300/wallet/${employerInfo.wallet_id}`);
+      if (!response.ok) throw new Error('Failed to fetch wallet balance');
+      const data = await response.json();
+      setWalletBalance(data.balance);
+    } catch (error) {
+      console.error(error);
     }
-    fetchWalletBalance();  
+  };
+  
+  useEffect(() => {
+    fetchWalletBalance();
   }, [employerInfo.wallet_id]);
 
     useEffect(() => {
@@ -273,7 +274,7 @@ export default function EmployerDashboard() {
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || 'Failed to top up wallet');
 
-                setWalletBalance(data.balance);
+                await fetchWalletBalance();
                 setTopUpSuccess(true);
                 setTopUpAmount('');
 
