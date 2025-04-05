@@ -57,21 +57,26 @@ export default function FreelancerDashboard() {
         setProfile(freelancer);
         setEditedProfile(freelancer);
 
-        const jobsRes = await fetch(`http://localhost:5100/job/freelancer/${freelancer.Id}`);
-        const jobsData = await jobsRes.json();
-        setJobs(jobsData.jobs || []);
+        const [jobsRes, walletRes] = await Promise.all([
+          fetch(`http://localhost:5100/job/freelancer/${freelancer.Id}`),
+          fetch(`http://localhost:5300/wallet/${wallet_id}`)
+        ]);
 
-        const walletRes = await fetch(`http://localhost:5300/wallet/${wallet_id}`);
+        const jobsData = await jobsRes.json();
         const walletData = walletRes.ok ? await walletRes.json() : { balance: 0 };
+
+        setJobs(jobsData.jobs || []);
         setWalletBalance(walletData.balance || 0);
       } catch (err) {
-        console.error('Failed to load dashboard data:', err);
+        console.error('Failed to refresh dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 10000);
+    return () => clearInterval(interval);
   }, [email]);
 
   const handleEditClick = () => setIsEditing(true);
@@ -148,14 +153,13 @@ export default function FreelancerDashboard() {
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
+      {/* Notifications */}
       {showNotifications && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
             <h2 className="text-2xl font-bold mb-4">New Notifications</h2>
             <ul className="list-disc pl-5 mb-4">
-              {notifications.map((notification, index) => (
-                <li key={index} className="text-gray-700">{notification}</li>
-              ))}
+              {notifications.map((n, i) => <li key={i} className="text-gray-700">{n}</li>)}
             </ul>
             <button
               className="mt-2 w-full bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] text-white px-4 py-2 rounded-md"
@@ -167,6 +171,7 @@ export default function FreelancerDashboard() {
         </div>
       )}
 
+      {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
         <motion.div
           initial={!hasAnimated ? { x: -100, opacity: 0 } : false}
@@ -182,9 +187,10 @@ export default function FreelancerDashboard() {
         <h1 className="text-3xl font-bold text-[#1860f1]">Freelancer Dashboard</h1>
       </div>
 
+      {/* Profile Section */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-black">
-          Welcome, {profile?.Name ? `${profile.Name}!` : email}
+          Welcome, {profile?.Name || email}
         </h2>
         <button
           className="px-4 py-2 rounded text-white font-medium bg-[#1860f1] hover:bg-[#bcef5d] hover:text-[#1860f1]"
@@ -204,21 +210,25 @@ export default function FreelancerDashboard() {
           </>
         ) : (
           <>
-            <p className="text-gray-600 text-base">Email: {profile?.Email || email}</p>
-            <p className="text-gray-600 text-base">Gender: {profile?.Gender || 'N/A'}</p>
-            <p className="text-gray-600 text-base">Skills: {profile?.Skills?.split(',').join(', ') || 'N/A'}</p>
+            <p className="text-gray-600 text-base">Email: {profile?.Email}</p>
+            <p className="text-gray-600 text-base">Gender: {profile?.Gender}</p>
+            <p className="text-gray-600 text-base">Skills: {profile?.Skills?.split(',').join(', ')}</p>
           </>
         )}
       </div>
 
+      {/* Wallet Section */}
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-semibold text-black">Wallet</h2>
-        <button className="px-4 py-2 rounded text-white font-medium transition-colors duration-200 bg-[#1860f1] hover:bg-[#bcef5d] hover:text-[#1860f1]">Withdraw</button>
+        <button className="px-4 py-2 rounded text-white font-medium transition-colors duration-200 bg-[#1860f1] hover:bg-[#bcef5d] hover:text-[#1860f1]">
+          Withdraw
+        </button>
       </div>
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
         <p className="text-gray-600 text-base">Balance: ${walletBalance?.toFixed(2) || '0.00'}</p>
       </div>
 
+      {/* Jobs Section */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4 text-black">Your Applied Jobs</h2>
         {jobs.length === 0 ? (
@@ -231,12 +241,26 @@ export default function FreelancerDashboard() {
               <div key={job.id} className="bg-white border rounded-lg p-3 shadow hover:shadow-md transition flex flex-col justify-between min-h-[150px]">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">{job.title}</h3>
-                  <p className="text-gray-600 text-sm"> Status: {job.status.toLowerCase() == "close" ? "Applied" : job.status.toLowerCase() == "pending approval" ? "Pending Approval" : job.status}</p>
+                  <p className="text-gray-600 text-sm">
+                    Status: {
+                      job.status.toLowerCase() === 'close' ? 'Applied'
+                      : job.status.toLowerCase() === 'pending approval' ? 'Pending Approval'
+                      : job.status.toLowerCase() === 'completed' ? 'Completed'
+                      : job.status
+                    }
+                  </p>
                   <p className="text-gray-600 text-sm">Price: ${job.price.toFixed(2)}</p>
                 </div>
                 <div className="mt-auto flex justify-between items-center pt-2">
-                  <a href={`${window.location.origin}/freelancer/job-listings`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:text-green-600">View Listing</a>
-                  {job.status.toLowerCase() === "pending approval" ? (
+                  <a
+                    href={`/freelancer/job-listings`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-blue-600 hover:text-green-600"
+                  >
+                    View Listing
+                  </a>
+                  {job.status.toLowerCase() === 'pending approval' || job.status.toLowerCase() === 'completed' ? (
                     <button
                       className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded cursor-default"
                       disabled
