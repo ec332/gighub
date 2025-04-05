@@ -3,6 +3,10 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import cageIcon from '@/public/cage.png';
+
 
 export default function EmployerDashboard() {
   const { data: session, status } = useSession();
@@ -183,9 +187,28 @@ export default function EmployerDashboard() {
     }
   };
   
-  if (status === 'loading') {
+  /* if (status === 'loading') {
     return <div>Loading...</div>;
-  }
+  } */
+
+    if (status === 'loading') {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 flex-col space-y-4">
+          <motion.div
+            transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+          >
+            <Image
+              src={cageIcon}
+              alt="Loading Dove"
+              width={70}
+              height={70}
+              className="drop-shadow-md"
+            />
+          </motion.div>
+          <p className="text-lg font-semibold text-[#1860f1] animate-pulse">Loading...</p>
+        </div>
+      );
+    }
 
   return (
     <div className="min-h-screen bg-gray-100 max-w mx-auto py-6 sm:px-6 lg:px-8"> 
@@ -214,35 +237,51 @@ export default function EmployerDashboard() {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold text-gray-900">Employer Dashboard</h1>
+      <div className="flex items-center space-x-3 mb-6">
+        <motion.div
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+          whileHover={{ rotate: [0, -10, 10, -10, 10, 0], scale: [1, 1.1, 1], transition: { duration: 1 } }}
+          className="relative"
+        >
+          <Image src={cageIcon} alt="Cage Icon" width={48} height={48} className="drop-shadow-md" />
+          <div className="absolute w-5 h-5 bg-blue-300 rounded-full blur-sm -z-10 top-1 left-1 animate-ping" />
+        </motion.div>
+        <h1 className="text-3xl font-bold text-[#1860F1]">Employer Dashboard</h1>
+      </div>
+
+      <h2 className="text-2xl font-semibold text-black mb-6">
+        Welcome, {employerInfo.name}!
+      </h2>
+
+
           
       {/* acct info */}
-      <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-semibold text-gray-900">
-              Welcome back, {employerInfo.name}!
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Email: {employerInfo.email}
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
-              Company: {employerInfo.company}
-            </p>
+      <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg px-3 py-4 sm:p-5">
+        <p className="text-sm text-gray-500">
+          Email: {employerInfo.email}
+        </p>
+        <p className="mt-2 text-sm text-gray-500">
+          Company: {employerInfo.company}
+        </p>
       </div>
+
 
       {/* wallet balance */}
       <div className='wallet'>
         <div className="mt-6 flex justify-between items-center">
-          <h2 className="text-xl font-bold">Wallet</h2>
+          <h2 className="text-xl font-semibold text-black">Wallet</h2>
         </div>
         <div className="bg-white shadow rounded-lg p-4 mt-2">
-          <p className="text-gray-700">Balance: ${walletBalance}</p>
+          <p className="text-gray-500">Balance: ${walletBalance}</p>
         </div>
       </div>
 
       {/* job listings */}
       <div className='job-listing'>
         <div className="mt-6 flex justify-between items-center">
-          <h2 className="text-xl font-bold">My Job Listings</h2>
+          <h2 className="text-xl font-semibold text-black">My Job Listings</h2>
           <button className="text-white px-4 py-2 rounded-md bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] transition-colors duration-200" onClick={() =>{console.log('Publish Job button clicked'); router.push('/employer/publish-job')}}>+ Publish New Job</button>
         </div>
         {Array.isArray(jobs) && jobs.length === 0 ? (
@@ -263,7 +302,7 @@ export default function EmployerDashboard() {
         
       {/* Waiting for Approval */}
       <div className="waiting-approval mt-8">
-        <h2 className="text-xl font-bold mb-4">Waiting for Approval</h2>
+        <h2 className="text-xl font-semibold text-black">Waiting for Approval</h2>
         {approvalJobs.length === 0 ? (
           <p className="mt-4 text-gray-500 bg-white p-4 shadow rounded-lg">No approval listings yet.</p>
         ) : (
