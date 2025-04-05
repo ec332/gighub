@@ -47,7 +47,7 @@ def accept_job():
         freelancer_id = job_details.get('freelancer_id')
         employer_id = job_details.get('employer_id')
 
-        # Step 5: Update job status to Closed & freelancer ID
+        # Step 1: Update job status to Closed & freelancer ID
         print(f"Invoking job microservice to update job status to Closed for job ID: {job_id}")
         job_response = requests.put(f'{JOB_SERVICE_URL}/{job_id}', json={'status': 'close', 'freelancer_id': freelancer_id})
         if job_response.status_code != 200:
@@ -55,7 +55,7 @@ def accept_job():
         job_data = job_response.json()
         print(f"Job status updated, details: {job_data}")
 
-        # Step 6: Send job accepted notification to employer via RabbitMQ (WORKS)
+        # Step 2: Send job accepted notification to employer via RabbitMQ (WORKS)
         try:
             connection = pika.BlockingConnection(pika.URLParameters(AMQP_URL))
             channel = connection.channel()
@@ -99,7 +99,6 @@ def accept_job():
         log_error_to_kafka(error_message, topic="accept-job-errors")
         return jsonify({"error": "An error occurred while accepting the job", "details": error_message}), 500
     
-    #ESCROW ID JUST TO TRACK THE ESCROW ACCOUNT, REMOVE AFTER
     return jsonify({"message": f"Job accepted, and notification sent"}), 201
     
 if __name__ == '__main__':
