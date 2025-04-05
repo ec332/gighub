@@ -113,7 +113,7 @@ def get_jobs_by_freelancer(freelancer_id):
     jobs = Job.query.filter_by(freelancer_id=freelancer_id).all()
 
     if not jobs:
-        return jsonify({"message": "No jobs assigned to this freelancer."}), 200
+        return jsonify({"error": "No jobs assigned to this freelancer."}), 404
 
     return jsonify({"jobs": [job.json() for job in jobs]}), 200
 
