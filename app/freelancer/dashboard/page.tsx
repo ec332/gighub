@@ -18,6 +18,7 @@ interface Profile {
   Email: string;
   Gender: string;
   Skills: string;
+  WalletId?: number;
 }
 
 export default function FreelancerDashboard() {

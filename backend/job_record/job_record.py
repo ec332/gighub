@@ -29,7 +29,7 @@ class Job(db.Model):
     category = db.Column('Category', db.String(100), nullable=True)
     skills = db.Column('Skills', db.Text, nullable=True) 
     price = db.Column('Price', db.Numeric(10, 2), nullable=True)
-    status = db.Column('Status', db.Enum('hiring', 'close', 'ongoing', 'finished', 'completed'), default='hiring')
+    status = db.Column('Status', db.Enum('hiring', 'close', 'finished', 'completed'), default='hiring')
 
     def __init__(self, employer_id, freelancer_id, title, description, category, skills, price, status):
             self.employer_id = employer_id
