@@ -85,13 +85,15 @@ export default function JobListings() {
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-gray-900">Matched Job Listings</h1>
-      <Link href="/freelancer/job-listings/carousel">
-        <button className="mt-4 px-4 py-2 bg-[#1860F1] text-white hover:bg-[#BBEF5D] hover:text-[#1860F1] rounded transition">
-          Swipe for Job!
-        </button>
-      </Link>
+    <div className="min-h-screen bg-gray-100 px-8 py-10">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <h1 className="text-3xl font-bold text-gray-900">Matched Job Listings</h1>
+        <Link href="/freelancer/job-listings/carousel">
+          <button className="px-4 py-2 bg-[#1860F1] text-white hover:bg-[#BBEF5D] hover:text-[#1860F1] rounded transition">
+            Swipe for Job!
+          </button>
+        </Link>
+      </div>
 
       {jobs.length === 0 ? (
         <p className="mt-4 text-gray-500">No matched jobs found.</p>
@@ -109,7 +111,7 @@ export default function JobListings() {
               <p className="text-sm text-gray-600">Price: ${job.price}</p>
               <div className="flex items-center justify-between">
                 <span className="inline-block px-2 py-1 text-xs rounded bg-green-100 text-green-700">
-                  {job.status}
+                  HIRING
                 </span>
                 <button
                   onClick={() => handleAcceptJob(job)}
@@ -154,8 +156,8 @@ export default function JobListings() {
       {modalMessage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-            <p className="text-gray-700">{modalMessage}</p>
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Failure to accept job.</h2>
+            <p className="text-gray-700">Please try again!</p>
             <button
               onClick={() => setModalMessage(null)}
               className="mt-6 bg-[#1860F1] text-white px-6 py-2 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition"

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
+import Link from 'next/link';
 
 interface Job {
   id: number;
@@ -26,7 +27,6 @@ export default function JobCarousel() {
   const [error, setError] = useState<string | null>(null);
 
   const [showRejectPopup, setShowRejectPopup] = useState(false);
-  const [showAcceptPopup, setShowAcceptPopup] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [acceptedJob, setAcceptedJob] = useState<Job | null>(null);
   const [modalSuccess, setModalSuccess] = useState(true);
@@ -69,8 +69,6 @@ export default function JobCarousel() {
       }
 
       if (e.key === 'ArrowRight' && job.status !== 'close') {
-        setShowAcceptPopup(true);
-        setTimeout(() => setShowAcceptPopup(false), 1500);
         await handleAcceptJob(job);
         goNext();
       }
@@ -108,7 +106,7 @@ export default function JobCarousel() {
 
       if (!res.ok) throw new Error();
 
-      const responseData = await res.json();
+      await res.json();
       setAcceptedJob(job);
       setModalSuccess(true);
       setShowModal(true);
@@ -129,21 +127,13 @@ export default function JobCarousel() {
     return <div className="p-8 text-gray-500">No more jobs to display.</div>;
   }
 
-  const job = jobs[currentIndex];
-
   return (
-    <div className="relative min-h-screen bg-gray-100 flex flex-col items-center justify-center py-10 px-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center py-4 px-8">
       <h1 className="text-3xl font-bold mb-6 text-center">Job Listings</h1>
 
       {showRejectPopup && (
         <div className="absolute top-10 z-50 px-6 py-3 bg-red-500 text-white rounded-full shadow-lg animate-fadeOut">
           Rejected!
-        </div>
-      )}
-
-      {showAcceptPopup && (
-        <div className="absolute top-10 z-50 px-6 py-3 bg-green-500 text-white rounded-full shadow-lg animate-fadeOut">
-          Accepted!
         </div>
       )}
 
@@ -168,7 +158,7 @@ export default function JobCarousel() {
               <p className="text-sm text-gray-600">Skills: {job.skills.join(', ')}</p>
               <p className="text-sm text-gray-600">Price: ${job.price}</p>
               <span className={`inline-block px-2 py-1 mt-2 text-xs rounded ${job.status === 'hiring' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {job.status}
+                HIRING
               </span>
               <div className="mt-4 text-sm text-gray-400">
                 Press ← to Reject | → to Accept
@@ -178,11 +168,19 @@ export default function JobCarousel() {
         </Carousel>
       </div>
 
+      {/* ✅ Back to Listings Button */}
+      <Link href="/freelancer/job-listings">
+        <button className="mt-10 px-6 py-2 bg-[#1860F1] text-white rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition">
+          Back to Job Listings Overview
+        </button>
+      </Link>
+
+      {/* ✅ Modal for job accept/fail */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full text-center">
             <h2 className={`text-2xl font-bold mb-4 ${modalSuccess ? 'text-green-600' : 'text-red-600'}`}>
-              {modalSuccess ? 'Job Accepted!' : 'Failed to accept job'}
+              {modalSuccess ? 'Job Accepted!' : 'Failed to accept job.'}
             </h2>
 
             {modalSuccess && acceptedJob ? (
@@ -194,7 +192,7 @@ export default function JobCarousel() {
                 <p><span className="font-semibold">Price:</span> ${acceptedJob.price}</p>
               </div>
             ) : (
-              <p className="text-gray-600 text-sm">Please try again.</p>
+              <p className="text-gray-600 text-sm">Please try again!</p>
             )}
 
             <button
