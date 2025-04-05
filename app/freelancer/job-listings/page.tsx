@@ -21,6 +21,9 @@ export default function JobListings() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [acceptedJob, setAcceptedJob] = useState<Job | null>(null);
+  const [modalMessage, setModalMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!email) return;
@@ -34,6 +37,7 @@ export default function JobListings() {
           },
           body: JSON.stringify({ freelancer_email: email }),
         });
+
         if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
         const data = await res.json();
         setJobs((data.jobs || []).filter((job: Job) => job.status === 'hiring'));
@@ -49,7 +53,7 @@ export default function JobListings() {
 
   const handleAcceptJob = async (job: Job) => {
     try {
-      const res = await fetch('http://localhost:5006/acceptjob', {
+      const res = await fetch('http://localhost:5002/acceptjob', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,16 +69,15 @@ export default function JobListings() {
       if (!res.ok) throw new Error(`Failed to accept job: ${res.statusText}`);
       const responseData = await res.json();
 
-      alert(responseData.message);
+      setAcceptedJob(job);
+      setShowModal(true);
 
       setJobs((prevJobs) =>
-        prevJobs.map((j) =>
-          j.id === job.id ? { ...j, status: 'close' } : j
-        )
+        prevJobs.map((j) => (j.id === job.id ? { ...j, status: 'close' } : j))
       );
     } catch (err: any) {
       console.error('Error accepting job:', err.message);
-      alert('Failed to accept job. Please try again.');
+      setModalMessage('Failed to accept job. Please try again.');
     }
   };
 
@@ -85,9 +88,9 @@ export default function JobListings() {
     <div className="min-h-screen bg-gray-100 max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900">Matched Job Listings</h1>
       <Link href="/freelancer/job-listings/carousel">
-      <button className="mt-4 px-4 py-2 bg-[#1860F1] text-white hover:bg-[#BBEF5D] hover:text-[#1860F1] rounded transition">
-        Swipe for Job!
-      </button>
+        <button className="mt-4 px-4 py-2 bg-[#1860F1] text-white hover:bg-[#BBEF5D] hover:text-[#1860F1] rounded transition">
+          Swipe for Job!
+        </button>
       </Link>
 
       {jobs.length === 0 ? (
@@ -122,6 +125,44 @@ export default function JobListings() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal for accepted job */}
+      {showModal && acceptedJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full text-center">
+            <h2 className="text-2xl font-bold text-green-600 mb-4">Job Accepted!</h2>
+            <div className="text-left space-y-2 text-sm text-gray-700">
+              <p><span className="font-semibold">Title:</span> {acceptedJob.title}</p>
+              <p><span className="font-semibold">Category:</span> {acceptedJob.category}</p>
+              <p><span className="font-semibold">Description:</span> {acceptedJob.description}</p>
+              <p><span className="font-semibold">Skills:</span> {acceptedJob.skills.join(', ')}</p>
+              <p><span className="font-semibold">Price:</span> ${acceptedJob.price}</p>
+            </div>
+            <button
+              onClick={() => setShowModal(false)}
+              className="mt-6 bg-[#1860F1] text-white px-6 py-2 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {modalMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+            <p className="text-gray-700">{modalMessage}</p>
+            <button
+              onClick={() => setModalMessage(null)}
+              className="mt-6 bg-[#1860F1] text-white px-6 py-2 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition"
+            >
+              OK
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -27,24 +27,23 @@ export default function JobCarousel() {
 
   const [showRejectPopup, setShowRejectPopup] = useState(false);
   const [showAcceptPopup, setShowAcceptPopup] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [acceptedJob, setAcceptedJob] = useState<Job | null>(null);
+  const [modalSuccess, setModalSuccess] = useState(true);
 
   useEffect(() => {
     if (!email) return;
-  
+
     async function fetchJobs() {
       try {
         const res = await fetch('http://localhost:5001/matchjob', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ freelancer_email: email }),
         });
-  
+
         if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
         const data = await res.json();
-  
-        // ✅ Filter only hiring jobs
         const hiringJobs = (data.jobs || []).filter((job: Job) => job.status === 'hiring');
         setJobs(hiringJobs);
       } catch (err: any) {
@@ -53,10 +52,9 @@ export default function JobCarousel() {
         setLoading(false);
       }
     }
-  
+
     fetchJobs();
   }, [email]);
-  
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -65,14 +63,12 @@ export default function JobCarousel() {
       const job = jobs[currentIndex];
 
       if (e.key === 'ArrowLeft') {
-        console.log(`❌ Rejected job: ${job.id}`);
         setShowRejectPopup(true);
         setTimeout(() => setShowRejectPopup(false), 1500);
         goNext();
       }
 
       if (e.key === 'ArrowRight' && job.status !== 'close') {
-        console.log(`✅ Accepting job: ${job.id}`);
         setShowAcceptPopup(true);
         setTimeout(() => setShowAcceptPopup(false), 1500);
         await handleAcceptJob(job);
@@ -86,10 +82,7 @@ export default function JobCarousel() {
 
   const goNext = () => {
     let nextIndex = currentIndex + 1;
-
-    if (nextIndex >= jobs.length) {
-      nextIndex = 0;
-    }
+    if (nextIndex >= jobs.length) nextIndex = 0;
 
     let attempts = 0;
     while (jobs[nextIndex]?.status === 'close' && attempts < jobs.length) {
@@ -104,9 +97,7 @@ export default function JobCarousel() {
     try {
       const res = await fetch('http://localhost:5002/acceptjob', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           employer_id: job.employer_id,
           job_id: job.id,
@@ -115,21 +106,20 @@ export default function JobCarousel() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Failed to accept job: ${res.statusText}`);
-      }
+      if (!res.ok) throw new Error();
 
       const responseData = await res.json();
-      alert(responseData.message);
+      setAcceptedJob(job);
+      setModalSuccess(true);
+      setShowModal(true);
 
       setJobs((prevJobs) =>
-        prevJobs.map((j) =>
-          j.id === job.id ? { ...j, status: 'close' } : j
-        )
+        prevJobs.map((j) => (j.id === job.id ? { ...j, status: 'close' } : j))
       );
-    } catch (err: any) {
-      console.error('Error accepting job:', err.message);
-      alert('Failed to accept job. Please try again.');
+    } catch (err) {
+      setAcceptedJob(null);
+      setModalSuccess(false);
+      setShowModal(true);
     }
   };
 
@@ -147,13 +137,13 @@ export default function JobCarousel() {
 
       {showRejectPopup && (
         <div className="absolute top-10 z-50 px-6 py-3 bg-red-500 text-white rounded-full shadow-lg animate-fadeOut">
-          ❌ Rejected!
+          Rejected!
         </div>
       )}
 
       {showAcceptPopup && (
         <div className="absolute top-10 z-50 px-6 py-3 bg-green-500 text-white rounded-full shadow-lg animate-fadeOut">
-          ✅ Accepted!
+          Accepted!
         </div>
       )}
 
@@ -171,22 +161,13 @@ export default function JobCarousel() {
           className="w-full"
         >
           {jobs.map((job) => (
-            <div
-              key={job.id}
-              className="p-6 bg-white rounded-lg shadow text-center"
-            >
+            <div key={job.id} className="p-6 bg-white rounded-lg shadow text-center">
               <h3 className="text-xl font-semibold text-[#1860f1] mb-2">{job.title}</h3>
               <p className="text-sm text-gray-600">{job.description}</p>
               <p className="text-sm text-gray-600">Category: {job.category}</p>
               <p className="text-sm text-gray-600">Skills: {job.skills.join(', ')}</p>
               <p className="text-sm text-gray-600">Price: ${job.price}</p>
-              <span
-                className={`inline-block px-2 py-1 mt-2 text-xs rounded ${
-                  job.status === 'hiring'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
-                }`}
-              >
+              <span className={`inline-block px-2 py-1 mt-2 text-xs rounded ${job.status === 'hiring' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                 {job.status}
               </span>
               <div className="mt-4 text-sm text-gray-400">
@@ -196,6 +177,35 @@ export default function JobCarousel() {
           ))}
         </Carousel>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full text-center">
+            <h2 className={`text-2xl font-bold mb-4 ${modalSuccess ? 'text-green-600' : 'text-red-600'}`}>
+              {modalSuccess ? 'Job Accepted!' : 'Failed to accept job'}
+            </h2>
+
+            {modalSuccess && acceptedJob ? (
+              <div className="text-left space-y-2 text-sm text-gray-700">
+                <p><span className="font-semibold">Title:</span> {acceptedJob.title}</p>
+                <p><span className="font-semibold">Category:</span> {acceptedJob.category}</p>
+                <p><span className="font-semibold">Description:</span> {acceptedJob.description}</p>
+                <p><span className="font-semibold">Skills:</span> {acceptedJob.skills.join(', ')}</p>
+                <p><span className="font-semibold">Price:</span> ${acceptedJob.price}</p>
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm">Please try again.</p>
+            )}
+
+            <button
+              onClick={() => setShowModal(false)}
+              className="mt-6 bg-[#1860F1] text-white px-6 py-2 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
