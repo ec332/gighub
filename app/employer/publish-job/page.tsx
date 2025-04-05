@@ -17,6 +17,8 @@ export default function CreateJob() {
   const [description, setDescription] = useState('testing');
   const [employerInfo, setEmployerInfo] = useState({ id: '' });
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
 
   async function fetchEmployerInfo() {
     try {
@@ -79,8 +81,7 @@ export default function CreateJob() {
       if (!response.ok) {
         throw new Error(`Failed to post job: ${response.statusText}`);
       }
-      alert('Job published successfully!');
-      router.push('/employer/dashboard');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error posting job:', error);
       alert('An error occurred while posting the job.');
@@ -106,6 +107,25 @@ export default function CreateJob() {
       </div>
     );
   }
+  
+  {showSuccessModal && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+        <h2 className="text-xl font-bold text-green-600 mb-4">✅ Job Posted Successfully</h2>
+        <p className="text-gray-700 mb-4">Your job listing is now live.</p>
+        <button
+          onClick={() => {
+            setShowSuccessModal(false);
+            router.push('/employer/dashboard');
+          }}
+          className="bg-[#1860F1] text-white px-4 py-2 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    </div>
+  )}
+  
   return (
     <div className="min-h-screen bg-gray-100 max-w mx-auto py-6 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-1">Publish New Job</h1>

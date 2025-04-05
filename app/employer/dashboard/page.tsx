@@ -17,6 +17,12 @@ export default function EmployerDashboard() {
   const [approvalJobs, setApprovalJobs] = useState([]);
   const [showNotifications, setShowNotifications] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState('');
+  const [topUpSuccess, setTopUpSuccess] = useState(false);
+  const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+
+
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -182,38 +188,18 @@ export default function EmployerDashboard() {
   
       if (!paymentResponse.ok) throw new Error(paymentData.error || 'Failed to release payment');
   
-      alert('Payment Released Successfully');
+      setShowPaymentSuccessModal(true);
       setApprovalJobs(approvalJobs.filter(job => job.jobId !== jobId)); // Remove the job from approval
     } catch (error) {
       console.error('Error releasing payment:', error);
       alert('Error releasing payment');
     }
   };
-  const handleTopUp = async () => {
-    try {
-      const amount = prompt('Enter the amount to top up:', '0');
-      if (!amount || isNaN(amount) || Number(amount) <= 0) {
-        alert('Please enter a valid amount.');
-        return;
-      }
 
-      const response = await fetch(`http://localhost:5300/wallet/${employerInfo.wallet_id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: Number(amount) }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to top up wallet');
-      alert('Wallet topped up successfully');
-      setWalletBalance(data.balance);  // Update the wallet balance after successful top-up
-    } catch (error) {
-      console.error('Error during top-up:', error);
-      alert('Error during top-up');
-    }
+  const handleTopUp = () => {
+    setShowTopUpModal(true);
   };
+  
 
 
     if (status === 'loading') {
@@ -237,6 +223,94 @@ export default function EmployerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 max-w mx-auto py-6 sm:px-6 lg:px-8"> 
+
+    {showTopUpModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+        {topUpSuccess ? (
+      <>
+        <h2 className="text-xl font-bold text-green-600 mb-4">Top-Up Successful</h2>
+        <p className="text-gray-700">Your wallet has been updated!</p>
+      </>
+    ) : (
+      <>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Top Up Wallet</h2>
+        <input
+          type="number"
+          min="1"
+          value={topUpAmount}
+          onChange={(e) => setTopUpAmount(e.target.value)}
+          className="w-full border rounded px-3 py-2 text-center text-lg focus:outline-none focus:ring focus:border-blue-300"
+          placeholder="Enter amount"
+        />
+        <div className="mt-6 flex justify-center gap-4">
+          <button
+            onClick={() => {
+              setTopUpAmount('');
+              setShowTopUpModal(false);
+              setTopUpSuccess(false);
+            }}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              if (!topUpAmount || isNaN(Number(topUpAmount)) || Number(topUpAmount) <= 0) {
+                alert('Please enter a valid amount.');
+                return;
+              }
+
+              try {
+                const response = await fetch(`http://localhost:5300/wallet/${employerInfo.wallet_id}`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ amount: Number(topUpAmount) }),
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Failed to top up wallet');
+
+                setWalletBalance(data.balance);
+                setTopUpSuccess(true);
+                setTopUpAmount('');
+
+                setTimeout(() => {
+                  setShowTopUpModal(false);
+                  setTopUpSuccess(false);
+                }, 2000);
+              } catch (error) {
+                console.error('Error during top-up:', error);
+                alert('Error during top-up');
+              }
+            }}
+            className="bg-[#1860F1] text-white px-4 py-2 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition"
+          >
+            Confirm
+          </button>
+        </div>
+      </>
+    )}
+        </div>
+      </div>
+    )}
+
+    {showPaymentSuccessModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+      <h2 className="text-xl font-bold text-green-600 mb-4">Payment Released</h2>
+      <p className="text-gray-700 mb-4">The freelancer has been paid successfully.</p>
+      <button
+        onClick={() => setShowPaymentSuccessModal(false)}
+        className="bg-[#1860F1] text-white px-4 py-2 rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
 
       {/* Notification Modal */}
       {showNotifications && (
@@ -354,5 +428,6 @@ export default function EmployerDashboard() {
         )}
       </div>
     </div> // main container
+    
   );
 }
