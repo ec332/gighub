@@ -123,7 +123,17 @@ export default function EmployerDashboard() {
           const response = await fetch(`http://localhost:5800/consume_notifications/employer/${employerInfo.id}`);
           if (!response.ok) throw new Error('Failed to fetch notifications');
           const data = await response.json();
-          setNotifications(data.notifications || []);
+          console.log(data);
+          const parsedNotifications = (data.notifications || []).map(n => {
+            try {
+              return typeof n === 'string' ? JSON.parse(n) : n;
+            } catch (err) {
+              console.error('Failed to parse notification:', n, err);
+              return null;
+            }
+          }).filter(n => n !== null);
+          
+          setNotifications(parsedNotifications);
         } catch (error) {
           console.error(error);
         }
@@ -237,7 +247,7 @@ export default function EmployerDashboard() {
             <ul className="list-disc pl-5 mb-4">
               {notifications.map((notification, index) => (
                 <li key={index} className="text-gray-700">
-                  {notification}
+                  {notification.message}
                 </li>
               ))}
             </ul>

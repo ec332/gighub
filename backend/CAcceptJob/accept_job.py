@@ -76,7 +76,7 @@ def accept_job():
             channel.queue_bind(exchange='user-job-accept-notification', queue=queue_name, routing_key=queue_name)
 
             message = {
-                "message": f"JOB has been ACCEPTED",
+                "message": f"Job {job_id} has been accepted by Freelancer {freelancer_id}!",
                 #"application_id": application_id,
                 "job_id": job_id,
                 "freelancer_id": freelancer_id

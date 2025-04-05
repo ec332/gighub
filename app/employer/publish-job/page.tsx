@@ -2,6 +2,10 @@
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import cageIcon from '@/public/cage.png';
+
 
 export default function CreateJob() {
   const router = useRouter();
@@ -12,6 +16,7 @@ export default function CreateJob() {
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('testing');
   const [employerInfo, setEmployerInfo] = useState({ id: '' });
+  const [loading, setLoading] = useState(false);
 
   async function fetchEmployerInfo() {
     try {
@@ -32,11 +37,13 @@ export default function CreateJob() {
 
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true); 
     try {
       const employerInfo = await fetchEmployerInfo();
 
       if (!employerInfo?.employer_id || !employerInfo?.wallet_id) {
         alert('Unable to retrieve employer information - missing ID or wallet');
+        setLoading(false);
         return;
       }
 
@@ -77,9 +84,28 @@ export default function CreateJob() {
     } catch (error) {
       console.error('Error posting job:', error);
       alert('An error occurred while posting the job.');
+    } finally {
+      setLoading(false);
     }
   };
-
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 flex-col space-y-4">
+        <motion.div
+          transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+        >
+          <Image
+            src={cageIcon}
+            alt="Loading Dove"
+            width={70}
+            height={70}
+            className="drop-shadow-md"
+          />
+        </motion.div>
+        <p className="text-lg font-semibold text-[#1860f1] animate-pulse">Loading...</p>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-100 max-w mx-auto py-6 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-1">Publish New Job</h1>
