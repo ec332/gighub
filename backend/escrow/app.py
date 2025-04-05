@@ -29,7 +29,6 @@ def create_escrow():
     employer_id = data.get("employer_id")
     job_id = data.get("job_id")
     amount = data.get("amount")
-    freelancer_id = data.get("freelancer_id")  # Optional
 
     if not all([employer_id, job_id, amount]):
         return jsonify({"message": "Missing required fields"}), 400
@@ -39,7 +38,7 @@ def create_escrow():
 
     new_escrow = Escrow(
         employer_id=employer_id, 
-        freelancer_id=freelancer_id,  # Can be None
+        freelancer_id=-1,  # Can be None
         job_id=job_id, 
         amount=amount
     )
@@ -52,6 +51,38 @@ def create_escrow():
         "status": new_escrow.status
     }), 201
 
+@app.route('/escrow/acceptedjob', methods=['PUT'])
+def accept_job():
+    if not request.is_json:
+        return jsonify({"error": "Request must be JSON"}), 400
+
+    data = request.get_json()
+    
+    # Validate required fields
+    if not data or "job_id" not in data or "freelancer_id" not in data:
+        return jsonify({"error": "Missing required fields: job_id and freelancer_id"}), 400
+
+    try:
+        # Find the escrow record by job_id
+        escrow = Escrow.query.filter_by(job_id=data["job_id"]).first()
+        
+        if not escrow:
+            return jsonify({"error": "Escrow not found for this job"}), 404
+            
+        # Update freelancer_id
+        escrow.freelancer_id = data["freelancer_id"]
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Freelancer assigned to job successfully",
+            "job_id": data["job_id"],
+            "freelancer_id": escrow.freelancer_id
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 # Retrieve Escrow
 @app.route('/escrow/<int:id>', methods=['GET'])
 def get_escrow(id):
@@ -63,7 +94,7 @@ def get_escrow(id):
         "data": {
             "escrow_id": escrow.id,
             "employer_id": escrow.employer_id,
-            "freelancer_id": escrow.freelancer_id,
+            # "freelancer_id": escrow.freelancer_id,
             "job_id": escrow.job_id,
             "amount": escrow.amount,
             "status": escrow.status,
@@ -76,16 +107,17 @@ def get_escrow(id):
 @app.route('/escrow/<int:id>', methods=['PUT'])
 def update_escrow(id):
     data = request.get_json()
-    
-    if "status" not in data:
-        return jsonify({"message": "Missing required field: status"}), 400
 
-    escrow = Escrow.query.get(id)
-    if not escrow or escrow.status != "pending":
-        return jsonify({"message": "Escrow not found or already processed"}), 400
+    if "status" not in data:
+        return jsonify({"message": "Missing required field: status"}), 469
+
+    escrow = Escrow.query.filter_by(job_id=id).first()
+
+    if not escrow or escrow.status != "Pending":
+        return jsonify({"message": "Escrow not found or already processed"}), 496
 
     if data["status"] not in ["released", "cancelled"]:
-        return jsonify({"message": "Invalid status. Allowed: 'released' or 'cancelled'"}), 400
+        return jsonify({"message": "Invalid status. Allowed: 'released' or 'cancelled'"}), 444
 
     # Update escrow status based on the request
     escrow.status = data["status"]

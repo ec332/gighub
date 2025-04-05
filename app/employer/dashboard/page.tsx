@@ -172,6 +172,7 @@ export default function EmployerDashboard() {
           ID: jobId,
           FreelancerID: freelancerId,
           Price: price,
+          
         }),
       });
   

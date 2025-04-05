@@ -93,6 +93,7 @@ def create_task():
     job_id = data["ID"]
     freelancer_id = data["FreelancerID"]
     amount = data["Price"]
+    wallet_id = data["wallet_id"]
 
     # Step 1: Update Job Record Status to 'completed'
     job_update_payload = {"job_id": job_id, "status": "completed"}
@@ -110,6 +111,7 @@ def create_task():
     try:
         escrow_response = requests.put(ESCROW_UPDATE_URL.format(job_id=job_id), json=escrow_update_payload)
         escrow_response.raise_for_status()
+
     except requests.exceptions.RequestException as e:    
     # Send error to your Flask error logging service
         log_error_to_kafka(str(e), topic="approve-job-errors")
@@ -118,7 +120,7 @@ def create_task():
     # Step 3: Transfer funds to freelancer's wallet
     wallet_update_payload = {"amount": amount}
     try:
-        wallet_response = requests.post(WALLET_UPDATE_URL.format(freelancer_id=freelancer_id), json=wallet_update_payload)
+        wallet_response = requests.post(WALLET_UPDATE_URL.format(wallet_id=wallet_id), json=wallet_update_payload)
         wallet_response.raise_for_status()
     except requests.exceptions.RequestException as e:    
     # Send error to your Flask error logging service

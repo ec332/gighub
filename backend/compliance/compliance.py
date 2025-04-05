@@ -51,7 +51,7 @@ def check_job_compliance(job):
         is_compliant = False
 
     # Rule 3: Price must be greater than zero
-    if job.get("price") is None or job["price"] <= 0:
+    if job.get("price") is None or float(job["price"]) <= 0:
         remarks.append("Price must be greater than zero.")
         is_compliant = False
 

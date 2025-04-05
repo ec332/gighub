@@ -46,6 +46,10 @@ def create_job_listing():
         if not job_data or 'job' not in job_data:
             return jsonify({"error": "Invalid job data format"}), 400
         skills = job_data['job'].get("skills")
+        skills = job_data['job'].get("skills", "")
+        skills_list = [skill.strip() for skill in skills.split(',') if skill.strip()]
+
+        job_data['job']['skills'] = skills_list
 
         #####1. CALLING COMPLIANCE MICROSERVICE######
         try:
@@ -57,6 +61,8 @@ def create_job_listing():
                 json=job_data, 
                 headers={'Content-Type': 'application/json'}
             )
+
+            print("TEST")
             # Check the compliance and raise an error if not compliant
             response_data = compliance_response.json()
             if not response_data['compliance']['is_compliant']:

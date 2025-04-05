@@ -47,6 +47,14 @@ def accept_job():
         freelancer_id = job_details.get('freelancer_id')
         employer_id = job_details.get('employer_id')
 
+        # Step 4: Update freelancer ID in Escrow Service
+        job_response = requests.put(f'{ESCROW_SERVICE_URL}/escrow/acceptedjob', json={'job_id': job_id, 'freelancer_id' : freelancer_id})
+        if job_response.status_code != 200:
+            raise Exception(f"Error updating job status: {job_response.text}")
+        job_data = job_response.json()
+        print(f"Job status updated, details: {job_data}")
+
+
         # Step 5: Update job status to Closed & freelancer ID
         print(f"Invoking job microservice to update job status to Closed for job ID: {job_id}")
         job_response = requests.put(f'{JOB_SERVICE_URL}/{job_id}', json={'status': 'close', 'freelancer_id': freelancer_id})
