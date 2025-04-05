@@ -40,6 +40,8 @@ export default function FreelancerDashboard() {
   const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
   const [showNotifications, setShowNotifications] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     if (!email) return;
@@ -156,7 +158,8 @@ setShowNotifications(false);
         console.error("Complete job error:", data);
         alert(`Job completion failed: ${data?.error || "Unknown server error"}`);
       } else {
-        alert("Job marked as complete and pending approval created!");
+        setSuccessMessage("Job Completed! Please wait for Pending Approval.");
+        setShowSuccessModal(true);
         setJobs((prevJobs) => prevJobs.map((j) => j.id === job.id ? { ...j, status: "pending approval" } : j));
       }
     } catch (err) {
@@ -186,6 +189,21 @@ setShowNotifications(false);
           </div>
         </div>
       )}
+
+      {showSuccessModal && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+                  <h2 className="text-2xl font-bold mb-4 text-center">Success</h2>
+                  <p className="text-gray-700 mb-4 text-center">{successMessage}</p>
+                  <button
+                    className="mt-2 w-full bg-[#1860F1] hover:bg-[#BBEF5D] hover:text-[#1860F1] text-white px-4 py-2 rounded-md"
+                    onClick={() => setShowSuccessModal(false)}
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            )}
 
       {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
@@ -272,11 +290,11 @@ setShowNotifications(false);
                     href={`/freelancer/job-listings`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-blue-600 hover:text-green-600"
+                    className="text-sm font-medium text-blue-600 hover:text-green-600 underline"
                   >
                     View Listing
                   </a>
-                  {job.status.toLowerCase() === 'pending approval' || job.status.toLowerCase() === 'completed' ? (
+                  {['pending approval', 'completed', 'finished'].includes(job.status.toLowerCase()) ? (
                     <button
                       className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded cursor-default"
                       disabled
