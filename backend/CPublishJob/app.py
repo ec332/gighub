@@ -213,11 +213,11 @@ def create_job_listing():
         log_error_to_kafka(error_message, topic="publish-job-errors")
         return jsonify({"error": "Internal server error"}), 500
 
-# @app.errorhandler(500)
-# def handle_500(error):
-#     error_message = f"Internal server error: {str(error)}"
-#     log_error_to_kafka(error_message, topic="publish-job-errors")
-#     return jsonify({"error": "Internal server error"}), 500
+@app.errorhandler(500)
+def handle_500(error):
+    error_message = f"Internal server error: {str(error)}"
+    log_error_to_kafka(error_message, topic="publish-job-errors")
+    return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5003, debug=True)
