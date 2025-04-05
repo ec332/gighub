@@ -62,7 +62,6 @@ def create_job_listing():
                 headers={'Content-Type': 'application/json'}
             )
 
-            print("TEST")
             # Check the compliance and raise an error if not compliant
             response_data = compliance_response.json()
             if not response_data['compliance']['is_compliant']:
@@ -93,7 +92,7 @@ def create_job_listing():
 
         #####2. CALLING WALLET TO SEE ENOUGH MONEY######
         try:
-            wallet_id = job_data['job']['wallet']
+            wallet_id = job_data['job']['wallet_id']
 
             # Construct the URL for the wallet service
             wallet_url = f"{WALLET_SERVICE_URL}/wallet/{wallet_id}"
@@ -117,7 +116,6 @@ def create_job_listing():
         except ValueError as e:
             # Catch the "Insufficient balance" error
             return jsonify({"error": str(e)}), 400  # Return 400 Bad Request for insufficient balance
-
 
 
         #####3. CALLING CHATGPT MICROSERVICE######

@@ -20,7 +20,10 @@ export default function CreateJob() {
       const data = await response.json();
       setEmployerInfo(data.employer);
       console.log(data.employer);
-      return data.employer.id; // Return the employer ID
+      return {
+        employer_id: data.employer.id,
+        wallet_id: data.employer.wallet_id // Assuming wallet_id exists in the response
+      };
     } catch (error) {
       console.error(error);
       return null;
@@ -30,11 +33,14 @@ export default function CreateJob() {
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const employerId = await fetchEmployerInfo();
-      if (!employerId) {
-        alert('Unable to retrieve employer ID');
+      const employerInfo = await fetchEmployerInfo();
+
+      if (!employerInfo?.employer_id || !employerInfo?.wallet_id) {
+        alert('Unable to retrieve employer information - missing ID or wallet');
         return;
       }
+
+      const { employer_id, wallet_id } = employerInfo;
       const jobId = Math.floor(Date.now() / 1000);
       const response = await fetch('http://localhost:5003/job-listing', {
         method: 'POST',
@@ -44,18 +50,19 @@ export default function CreateJob() {
         body: JSON.stringify({
           job: {
             // id: jobId,
-            employer_id: employerId,
+            employer_id: employer_id,
             title,
             category,
             skills,
             price,
-            description
+            description,
+            wallet_id: wallet_id
           },
         }),
       });
       console.log('Response status:', response.status);
       console.log('Response text:', await response.text());
-      
+
       if (!response.ok) {
         throw new Error(`Failed to post job: ${response.statusText}`);
       }
@@ -85,8 +92,8 @@ export default function CreateJob() {
             required
           />
         </label>
-       {/* Category Dropdown */}
-       <label className="block mb-4">
+        {/* Category Dropdown */}
+        <label className="block mb-4">
           <span className="text-gray-700">Category</span>
           <select
             value={category}
