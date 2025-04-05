@@ -18,6 +18,7 @@ interface Job {
 export default function JobListings() {
   const { data: session } = useSession();
   const email = session?.user?.email;
+  const [freelancerId, setFreelancerId] = useState<number | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +26,34 @@ export default function JobListings() {
   const [acceptedJob, setAcceptedJob] = useState<Job | null>(null);
   const [modalMessage, setModalMessage] = useState<string | null>(null);
 
+  // Fetch freelancer ID
   useEffect(() => {
     if (!email) return;
+
+    async function fetchFreelancerId() {
+      try {
+        const res = await fetch(
+          `https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/${email}/`
+        );
+        if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+        const data = await res.json();
+        if (data.Result.Success) {
+          setFreelancerId(data.Freelancer.Id); // Store the freelancer ID
+        } else {
+          throw new Error(data.Result.ErrorMessage || 'Failed to fetch freelancer ID');
+        }
+      } catch (err: any) {
+        console.error('Error fetching freelancer ID:', err.message);
+        setError(err.message);
+      }
+    }
+
+    fetchFreelancerId();
+  }, [email]);
+
+  // Fetch jobs
+  useEffect(() => {
+    if (!email || !freelancerId) return;
 
     async function fetchJobs() {
       try {
@@ -49,8 +76,9 @@ export default function JobListings() {
     }
 
     fetchJobs();
-  }, [email]);
+  }, [email, freelancerId]);
 
+  // Handle accepting a job
   const handleAcceptJob = async (job: Job) => {
     try {
       const res = await fetch('http://localhost:5002/acceptjob', {
@@ -59,10 +87,9 @@ export default function JobListings() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          employer_id: job.employer_id,
           job_id: job.id,
-          pay: job.price,
-          freelancer_email: email,
+          freelancer_id: freelancerId,
+          employer_id: job.employer_id,
         }),
       });
 
@@ -85,15 +112,13 @@ export default function JobListings() {
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 px-8 py-10">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <h1 className="text-3xl font-bold text-gray-900">Matched Job Listings</h1>
-        <Link href="/freelancer/job-listings/carousel">
-          <button className="px-4 py-2 bg-[#1860F1] text-white hover:bg-[#BBEF5D] hover:text-[#1860F1] rounded transition">
-            Swipe for Job!
-          </button>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-gray-100 max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-bold text-gray-900">Matched Job Listings</h1>
+      <Link href="/freelancer/job-listings/carousel">
+        <button className="mt-4 px-4 py-2 bg-[#1860F1] text-white hover:bg-[#BBEF5D] hover:text-[#1860F1] rounded transition">
+          Swipe for Job!
+        </button>
+      </Link>
 
       {jobs.length === 0 ? (
         <p className="mt-4 text-gray-500">No matched jobs found.</p>
@@ -110,8 +135,14 @@ export default function JobListings() {
               <p className="text-sm text-gray-600">Skills: {job.skills?.join(', ')}</p>
               <p className="text-sm text-gray-600">Price: ${job.price}</p>
               <div className="flex items-center justify-between">
-                <span className="inline-block px-2 py-1 text-xs rounded bg-green-100 text-green-700">
-                  HIRING
+                <span
+                  className={`inline-block px-2 py-1 text-xs rounded ${
+                    job.status === 'hiring'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {job.status}
                 </span>
                 <button
                   onClick={() => handleAcceptJob(job)}
