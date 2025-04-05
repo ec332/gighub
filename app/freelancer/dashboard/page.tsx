@@ -39,10 +39,7 @@ export default function FreelancerDashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
   const [showNotifications, setShowNotifications] = useState(true);
-  const [notifications] = useState([
-    'New job application received for "UI/UX Designer".',
-    'Your job "Temp Sales Assistant" has been marked as completed.',
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     if (!email) return;
@@ -106,7 +103,26 @@ export default function FreelancerDashboard() {
     }
   };
 
-  const handleAcknowledge = () => setShowNotifications(false);
+  useEffect(() => {
+    if (!profile?.Id) return;
+  
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch(`http://localhost:5800/consume_notifications/freelancer/${profile.Id}`);
+        if (!response.ok) throw new Error('Failed to fetch notifications');
+        const data = await response.json();
+        setNotifications(data.notifications || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+  
+    fetchNotifications();
+  }, [profile?.Id]);
+
+const handleAcknowledge = () => {
+setShowNotifications(false);
+};
 
   const handleCompleteJob = async (job: Job) => {
     try {
