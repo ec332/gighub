@@ -84,8 +84,7 @@ def create_task():
     data = request.get_json()
 
     required_fields = [
-        "ID", "EmployerID", "FreelancerID", "Title", "Description", 
-        "Category", "Price", "Status", "isCompliant", "ComplianceID"
+        "ID", "FreelancerID", "Price"
     ]
     
     if not all(field in data for field in required_fields):
