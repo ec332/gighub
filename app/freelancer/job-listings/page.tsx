@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import doveIcon from '@/public/dove.png';
 
 interface Job {
   id: number;
@@ -108,7 +111,24 @@ export default function JobListings() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading matched jobs...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 flex-col space-y-4">
+        <motion.div
+          transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+        >
+          <Image
+            src={doveIcon}
+            alt="Loading Dove"
+            width={64}
+            height={64}
+            className="drop-shadow-md"
+          />
+        </motion.div>
+        <p className="text-lg font-semibold text-[#1860f1] animate-pulse">Loading...</p>
+      </div>
+    );
+  }
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   return (
@@ -153,7 +173,7 @@ export default function JobListings() {
                       : 'bg-[#1860F1] text-white hover:bg-[#BBEF5D] hover:text-[#1860F1]'
                   }`}
                 >
-                  {job.status === 'close' ? 'Job Accepted' : 'Accept Job'}
+                  {job.status === 'Close' ? 'Closed' : 'Accept Job'}
                 </button>
               </div>
             </div>
@@ -168,9 +188,6 @@ export default function JobListings() {
             <h2 className="text-2xl font-bold text-green-600 mb-4">Job Accepted!</h2>
             <div className="text-left space-y-2 text-sm text-gray-700">
               <p><span className="font-semibold">Title:</span> {acceptedJob.title}</p>
-              <p><span className="font-semibold">Category:</span> {acceptedJob.category}</p>
-              <p><span className="font-semibold">Description:</span> {acceptedJob.description}</p>
-              <p><span className="font-semibold">Skills:</span> {acceptedJob.skills.join(', ')}</p>
               <p><span className="font-semibold">Price:</span> ${acceptedJob.price}</p>
             </div>
             <button
