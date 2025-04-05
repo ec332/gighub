@@ -293,7 +293,7 @@ export default function EmployerDashboard() {
               <h3 className="text-xl font-semibold">{job.title}</h3>
               <p className="text-sm text-gray-600 overflow-hidden overflow-ellipsis whitespace-nowrap">Job Description: {job.description}</p>
               <p className="text-sm text-gray-600">Pay: ${job.price}</p>
-              <p className="text-sm text-gray-600">Status: {job.status}</p>
+              <p className="text-sm text-gray-600">Status: {job.status.charAt(0).toUpperCase() + job.status.slice(1)}</p>
             </div>
           ))}
         </div>
