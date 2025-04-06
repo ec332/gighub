@@ -1,70 +1,71 @@
-# GigHub
+# Gighub System Setup Instructions
 
-A platform connecting employers and employees in the gig economy.
+This README outlines the steps to build and run the Gighub project, including starting all services, running Docker containers, and executing backend scripts.
 
-## Prerequisites
+---
 
-- Node.js 18+ (LTS recommended)
-- npm or yarn
-- Git
+## 🔧 Step-by-Step Setup
 
-## Getting Started
+### 1. Start Core Services in different terminals
 
-1. Clone the repository:
 ```bash
-git clone <your-repository-url>
-cd gighub
-```
+cd backend/error
+docker compose up --build
 
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
+cd backend/wallet
+docker compose up --build
 
-3. Set up environment variables:
-   - Copy `.env.example` to `.env`
-   - Update the environment variables with your values:
-```bash
-cp .env.example .env
-```
+cd backend/pendingapproval
+docker compose up --build
 
-Required environment variables:
-```env
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-key
-MONGODB_URI=your-database-url
-```
+cd backend/notification
+docker compose up --build
 
-4. Start the development server:
-```bash
+cd backend/job_record
+docker compose up --build
+
+cd backend/escrow
+docker compose up --build
+
+cd backend/employer
+docker compose up --build
+
+cd backend/compliance
+docker compose up --build
+
+cd backend/chatgpt
+docker build -t gighub-chatgpt .
+docker run -p 5700:5700 --env-file .env --name gighub-chatgpt gighub-chatgpt
+
+# Publish Job
+cd backend/CPublishJob
+python app.py
+
+# Match Job
+cd backend/CMatchJob
+python match_job.py
+
+# Accept Job
+cd backend/CAcceptJob
+python accept_job.py
+
+# Complete Job
+cd backend/CCompleteJob
+python app.py
+
+# Approve Job
+cd backend/CApproveJob
+python app.py
+
+# Frontend: from root folder
 npm run dev
-# or
-yarn dev
-```
 
-The application will be available at [http://localhost:3000](http://localhost:3000)
+✅ Final Checklist
+ All 9 Docker services are running
 
-Note: The `.next` directory will be automatically generated when you run either `npm run dev` or `npm run build`. You don't need to create or install it manually.
+ Python microservices are running
 
-## Available Scripts
+ Frontend is running on localhost:3000
 
-- `npm run dev` - Start development server (creates .next directory automatically)
-- `npm run build` - Build for production (creates optimized .next directory)
-- `npm start` - Start production server (requires .next from build)
-- `npm run lint` - Run ESLint
-- `npm run test` - Run tests (if configured)
 
-## Features
 
-- User Authentication (NextAuth.js)
-- Role-based access (Employer/Employee)
-- Dashboard for both user types
-- Modern UI with Tailwind CSS
-
-## Contributing
-
-1. Create a new branch
-2. Make your changes
-3. Submit a pull request
