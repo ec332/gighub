@@ -25,11 +25,33 @@ export default function JobCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [freelancerId, setFreelancerId] = useState<number | null>(null);
 
   const [showRejectPopup, setShowRejectPopup] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [acceptedJob, setAcceptedJob] = useState<Job | null>(null);
   const [modalSuccess, setModalSuccess] = useState(true);
+
+  useEffect(() => {
+    if (!email) return;
+
+    async function fetchFreelancerId() {
+      try {
+        const res = await fetch(
+          `https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/${email}/`
+        );
+        if (!res.ok) throw new Error("Failed to fetch freelancer ID");
+        const data = await res.json();
+        if (data.Result.Success) {
+          setFreelancerId(data.Freelancer.Id);
+        }
+      } catch (err) {
+        console.error("Error fetching freelancer ID", err);
+      }
+    }
+
+    fetchFreelancerId();
+  }, [email]);
 
   useEffect(() => {
     if (!email) return;
@@ -58,7 +80,7 @@ export default function JobCarousel() {
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
-      if (!jobs.length || !email) return;
+      if (!jobs.length || !email || !freelancerId) return;
 
       const job = jobs[currentIndex];
 
@@ -76,7 +98,7 @@ export default function JobCarousel() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [jobs, currentIndex, email]);
+  }, [jobs, currentIndex, email, freelancerId]);
 
   const goNext = () => {
     let nextIndex = currentIndex + 1;
@@ -97,10 +119,9 @@ export default function JobCarousel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employer_id: job.employer_id,
           job_id: job.id,
-          pay: job.price,
-          freelancer_email: email,
+          employer_id: job.employer_id,
+          freelancer_id: freelancerId,
         }),
       });
 
@@ -157,7 +178,7 @@ export default function JobCarousel() {
               <p className="text-sm text-gray-600">Category: {job.category}</p>
               <p className="text-sm text-gray-600">Skills: {job.skills.join(', ')}</p>
               <p className="text-sm text-gray-600">Price: ${job.price}</p>
-              <span className={`inline-block px-2 py-1 mt-2 text-xs rounded ${job.status === 'hiring' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              <span className="inline-block px-2 py-1 mt-2 text-xs rounded bg-green-100 text-green-700">
                 HIRING
               </span>
               <div className="mt-4 text-sm text-gray-400">
@@ -168,14 +189,12 @@ export default function JobCarousel() {
         </Carousel>
       </div>
 
-      {/* ✅ Back to Listings Button */}
       <Link href="/freelancer/job-listings">
         <button className="mt-10 px-6 py-2 bg-[#1860F1] text-white rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition">
           Back to Job Listings Overview
         </button>
       </Link>
 
-      {/* ✅ Modal for job accept/fail */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full text-center">
@@ -186,9 +205,6 @@ export default function JobCarousel() {
             {modalSuccess && acceptedJob ? (
               <div className="text-left space-y-2 text-sm text-gray-700">
                 <p><span className="font-semibold">Title:</span> {acceptedJob.title}</p>
-                <p><span className="font-semibold">Category:</span> {acceptedJob.category}</p>
-                <p><span className="font-semibold">Description:</span> {acceptedJob.description}</p>
-                <p><span className="font-semibold">Skills:</span> {acceptedJob.skills.join(', ')}</p>
                 <p><span className="font-semibold">Price:</span> ${acceptedJob.price}</p>
               </div>
             ) : (
