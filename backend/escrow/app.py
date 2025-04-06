@@ -74,7 +74,7 @@ def accept_job():
         db.session.commit()
         
         return jsonify({
-            "message": "Freelancer assigned to job successfully",
+            "message": "Freelancer assigned to escrow successfully",
             "job_id": data["job_id"],
             "freelancer_id": escrow.freelancer_id
         }), 200
