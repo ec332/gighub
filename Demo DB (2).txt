@@ -29,6 +29,9 @@ company = AIStartup
 wallet_id = 320
 
 ```
+Go to Employer Postgres DB Container > Exec
+# psql -U employer_user -t employer_db
+
 INSERT INTO employer (id, name, email, company, wallet_id)
 VALUES (100, 'AIStartup', 'aistartup@gmail.com', 'AIStartup', 320)
 ON CONFLICT (email)
@@ -45,17 +48,17 @@ WalletID = 680
 Role = Freelancer
 Balance = 1500 
 
-```
-INSERT INTO wallets ("WalletID", "Role", "Balance")
-VALUES (680, 'Freelancer', 1500.00);
-```
-
-
 WalletID = 320
 Role = Employer
 Balance = 2000
 
 ```
+Go to Wallet Postgres DB Container > Exec
+# psql -U postgres -t wallet_service
+
+INSERT INTO wallets ("WalletID", "Role", "Balance")
+VALUES (680, 'Freelancer', 1500.00);
+
 INSERT INTO wallets ("WalletID", "Role", "Balance")
 VALUES (320, 'Employer', 2000.00);
 ```

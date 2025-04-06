@@ -100,7 +100,7 @@ def get_jobs_by_skills():
     if not data or 'skills' not in data or not isinstance(data['skills'], list):
         return jsonify({"error": "A list of skills is required"}), 400
 
-    skills = data['skills']
+    skills = [skill.strip() for skill in data['skills']]
 
     jobs = Job.query.filter(
         or_(*[Job.skills.ilike(f"%{skill}%") for skill in skills])
