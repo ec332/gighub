@@ -205,9 +205,6 @@ export default function JobCarousel() {
             {modalSuccess && acceptedJob ? (
               <div className="text-left space-y-2 text-sm text-gray-700">
                 <p><span className="font-semibold">Title:</span> {acceptedJob.title}</p>
-                <p><span className="font-semibold">Category:</span> {acceptedJob.category}</p>
-                <p><span className="font-semibold">Description:</span> {acceptedJob.description}</p>
-                <p><span className="font-semibold">Skills:</span> {acceptedJob.skills.join(', ')}</p>
                 <p><span className="font-semibold">Price:</span> ${acceptedJob.price}</p>
               </div>
             ) : (
