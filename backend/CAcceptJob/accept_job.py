@@ -102,7 +102,7 @@ def accept_job():
         error_message = str(e)
         print("Error occured, Logging to kafka...")
         log_error_to_kafka(error_message, topic="accept-job-errors")
-        return jsonify({"error": "An error occurred while accepting the job", "details": error_message}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
     
     return jsonify({"message": f"Job accepted, and notification sent"}), 200
     
