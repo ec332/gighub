@@ -58,5 +58,20 @@ def get_jobs():
     job_list = [{"jobId": job.job_id, "employerId": job.employer_id} for job in jobs]
     return jsonify(job_list)
 
+@app.route('/pendingapproval/<int:job_id>', methods=['DELETE'])
+def delete_job(job_id):
+    try:
+        job = Job.query.get(job_id)
+        if not job:
+            return jsonify({"error": f"No job found with job_id {job_id}"}), 404
+
+        db.session.delete(job)
+        db.session.commit()
+        return jsonify({"message": f"Job with job_id {job_id} deleted successfully"}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

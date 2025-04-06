@@ -8,6 +8,7 @@ services:
       - FLASK_ENV=development
     depends_on:
       - db
+    restart: always
 
   db:
     image: postgres:15

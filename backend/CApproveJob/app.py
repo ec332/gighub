@@ -11,6 +11,7 @@ JOB_RECORD_UPDATE_URL = "http://localhost:5100/job/{job_id}"
 ESCROW_UPDATE_URL = "http://localhost:5200/escrow/{job_id}"
 WALLET_UPDATE_URL = "http://localhost:5300/wallet/{wallet_id}"
 RETRIEVE_WALLET_URL = "https://personal-byixijno.outsystemscloud.com/Freelancer/rest/v1/freelancer/byid"
+JOB_RECORD_DELETE_URL = "http://localhost:5500/pendingapproval/{job_id}"
 
 # AMQP Configuration (Update this with actual credentials)
 AMQP_URL = "amqp://guest:guest@localhost:5672/"
@@ -117,8 +118,7 @@ def create_task():
         log_error_to_kafka(str(e), topic="approve-job-errors")
         return jsonify({"error": "Failed to update escrow status", "details": str(e)}), 500
 
-    print("DONE")
-    #Send
+    # Step 3: Request for wallet ID from Freelancer Microservice
     try:
         url = f"{RETRIEVE_WALLET_URL}/{freelancer_id}"
         response = requests.get(url)
@@ -129,9 +129,7 @@ def create_task():
     except Exception as e:
         return jsonify({"error": "Failed to retrieve wallet ID", "message": str(e)}), 500
 
-    print(wallet_id)
-
-    # Step 2: Transfer funds to freelancer's wallet
+    # Step 4: Transfer funds to freelancer's wallet
     wallet_update_payload = {"amount": amount}
     try:
         wallet_response = requests.post(WALLET_UPDATE_URL.format(wallet_id=wallet_id), json=wallet_update_payload)
@@ -142,7 +140,18 @@ def create_task():
 
     # return jsonify({"message": "Payment processed successfully"}), 200
 
-    # Step 4: Send AMQP Notification
+    # Step 5: Send HTTP Delete to Pending Approval
+    try:
+        delete_response = requests.delete(JOB_RECORD_DELETE_URL.format(job_id=job_id))
+        delete_response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        log_error_to_kafka(str(e), topic="approve-job-errors")
+        return jsonify({
+            "error": "Payment processed, but failed to delete job from pending approval list",
+            "details": str(e)
+        }), 500
+
+    # Step 6: Send AMQP Notification
     try:
         send_payment_notification(freelancer_id, amount)
     except Exception as e:

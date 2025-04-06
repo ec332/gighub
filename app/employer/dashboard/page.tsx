@@ -402,7 +402,7 @@ export default function EmployerDashboard() {
               <p className="text-sm text-gray-600">Pay: ${job.price}</p>
               <p className="text-sm text-gray-600">
               Status: {job.status === 'close' 
-                ? 'Closed' 
+                ? 'In Progress' 
                 : job.status.charAt(0).toUpperCase() + job.status.slice(1)}
             </p>
             </div>

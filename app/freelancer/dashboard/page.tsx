@@ -313,6 +313,7 @@ setShowNotifications(false);
                       job.status.toLowerCase() === 'close' ? 'Applied'
                       : job.status.toLowerCase() === 'pending approval' ? 'Pending Approval'
                       : job.status.toLowerCase() === 'completed' ? 'Completed'
+                      : job.status.toLowerCase() === 'finished' ? 'Waiting for Approval'
                       : job.status
                     }
                   </p>
@@ -327,7 +328,7 @@ setShowNotifications(false);
                   >
                     View Listing
                   </a>
-                  {['pending approval', 'completed'].includes(job.status.toLowerCase()) ? (
+                  {['pending approval', 'completed', 'finished'].includes(job.status.toLowerCase()) ? (
                     <button
                       className="px-4 py-2 text-sm font-semibold text-[#1860F1] bg-[#BBEF5D] rounded cursor-default"
                       disabled
