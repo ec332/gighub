@@ -28,14 +28,14 @@ class ErrorLog(db.Model):
 with app.app_context():
     db.create_all()
 
-# Retrieve Stored Errors from PostgreSQL
-@app.route('/api/errors', methods=['GET'])
-def get_errors():
-    logs = ErrorLog.query.all()
-    return jsonify([
-        {"id": log.id, "topic": log.topic, "message": log.message, "timestamp": log.timestamp.isoformat()}
-        for log in logs
-    ]), 200
+# # Retrieve Stored Errors from PostgreSQL
+# @app.route('/api/errors', methods=['GET'])
+# def get_errors():
+#     logs = ErrorLog.query.all()
+#     return jsonify([
+#         {"id": log.id, "topic": log.topic, "message": log.message, "timestamp": log.timestamp.isoformat()}
+#         for log in logs
+#     ]), 200
 
 # Kafka Consumer (Background Thread)
 def consume_errors():

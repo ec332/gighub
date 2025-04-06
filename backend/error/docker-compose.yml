@@ -31,6 +31,7 @@ services:
     ports:
       - "9092:9092"    # Internal Docker network
       - "29092:29092"  # External access
+    restart: always
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
