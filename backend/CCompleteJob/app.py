@@ -103,7 +103,7 @@ def create_task():
     except requests.exceptions.RequestException as e:    
     # Send error to Flask error logging service
         log_error_to_kafka(str(e), topic="complete-job-errors")
-        return jsonify({"error": "Failed to update job record", "details": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
     
     # Step 2: Send AMQP Notification
     try:
@@ -112,7 +112,7 @@ def create_task():
     except Exception as e:
     # Send error to Flask error logging service
         log_error_to_kafka(str(e), topic="complete-job-errors")
-        return jsonify({"error": "Job completed, but failed to send notification", "details": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
 
     # Step 3: Create job in Pending Approval
     create_request_payload = {"employerId" : employer_id, "jobId" : job_id}
@@ -123,7 +123,7 @@ def create_task():
     except requests.exceptions.RequestException as e:
     # Send error to Flask error logging service
         log_error_to_kafka(str(e), topic="complete-job-errors")
-        return jsonify({"error": "Failed to create Job Request", "details": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
 
     return jsonify({"message": "Pending approval job request created, and notification sent"}), 201
 

@@ -52,13 +52,21 @@ def consume_errors():
 
     with app.app_context():
         for msg in consumer:
-            error_log = ErrorLog(topic=msg.topic, message=msg.value["error_message"])
-            db.session.add(error_log)
-            db.session.commit()
-            print(f"Stored error from {msg.topic}: {msg.value['error_message']}")
+            try:
+                error_log = ErrorLog(topic=msg.topic, message=msg.value.get("error_message", "No error message"))
+                db.session.add(error_log)
+                db.session.commit()
+                print(f"Stored error from {msg.topic}: {msg.value.get('error_message', 'No error message')}")
+            except Exception as e:
+                print(f"Error processing message from {msg.topic}: {e}")
 
-# Start Consumer in Background Thread
-threading.Thread(target=consume_errors, daemon=True).start()
+# Start Kafka Consumer in a Separate Thread
+def start_kafka_consumer():
+    consumer_thread = threading.Thread(target=consume_errors, daemon=True)
+    consumer_thread.start()
 
 if __name__ == "__main__":
+    # Start the Kafka consumer on app startup
+    start_kafka_consumer()
+    
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)), debug=True)

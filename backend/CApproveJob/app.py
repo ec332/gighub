@@ -104,7 +104,7 @@ def create_task():
     except requests.exceptions.RequestException as e:    
     # Send error to your Flask error logging service
         log_error_to_kafka(str(e), topic="approve-job-errors")
-        return jsonify({"error": "Failed to update job record", "details": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
 
 
     # Step 2: Call Escrow Microservice to release funds
@@ -116,7 +116,7 @@ def create_task():
     except requests.exceptions.RequestException as e:    
     # Send error to your Flask error logging service
         log_error_to_kafka(str(e), topic="approve-job-errors")
-        return jsonify({"error": "Failed to update escrow status", "details": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
 
     # Step 3: Request for wallet ID from Freelancer Microservice
     try:
@@ -127,7 +127,7 @@ def create_task():
         print(data)
         wallet_id = data["Freelancer"]["WalletId"]
     except Exception as e:
-        return jsonify({"error": "Failed to retrieve wallet ID", "message": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
 
     # Step 4: Transfer funds to freelancer's wallet
     wallet_update_payload = {"amount": amount}
@@ -136,7 +136,7 @@ def create_task():
         wallet_response.raise_for_status()
     except requests.exceptions.RequestException as e:    
         log_error_to_kafka(str(e), topic="approve-job-errors")  # Make sure this function is defined
-        return jsonify({"error": "Failed to transfer funds to wallet", "details": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
 
     # return jsonify({"message": "Payment processed successfully"}), 200
 
@@ -147,8 +147,7 @@ def create_task():
     except requests.exceptions.RequestException as e:
         log_error_to_kafka(str(e), topic="approve-job-errors")
         return jsonify({
-            "error": "Payment processed, but failed to delete job from pending approval list",
-            "details": str(e)
+            "error": "An error has occured. It has been forwarded to our backend teams for a fix!"
         }), 500
 
     # Step 6: Send AMQP Notification
@@ -157,7 +156,7 @@ def create_task():
     except Exception as e:
     # Send error to your Flask error logging service
         log_error_to_kafka(str(e), topic="approve-job-errors")
-        return jsonify({"error": "Payment processed, but failed to send notification", "details": str(e)}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
 
     return jsonify({"message": "Task created, status updated to Pending, escrow released, payment processed, and notification sent"}), 201
 
