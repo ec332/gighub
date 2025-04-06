@@ -94,6 +94,7 @@ export default function JobCarousel() {
   const handleAcceptJob = async (job: Job) => {
     try {
       const res = await fetch('http://localhost:5002/acceptjob', {
+        // 🔁 Use port 5002 to match job-listings page
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -128,7 +129,7 @@ export default function JobCarousel() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center py-4 px-8">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center py-8 px-8">
       <h1 className="text-3xl font-bold mb-6 text-center">Job Listings</h1>
 
       {showRejectPopup && (
@@ -157,8 +158,14 @@ export default function JobCarousel() {
               <p className="text-sm text-gray-600">Category: {job.category}</p>
               <p className="text-sm text-gray-600">Skills: {job.skills.join(', ')}</p>
               <p className="text-sm text-gray-600">Price: ${job.price}</p>
-              <span className={`inline-block px-2 py-1 mt-2 text-xs rounded ${job.status === 'hiring' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                HIRING
+              <span
+                className={`inline-block px-2 py-1 mt-2 text-xs rounded ${
+                  job.status === 'hiring'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                }`}
+              >
+                {job.status.toUpperCase()}
               </span>
               <div className="mt-4 text-sm text-gray-400">
                 Press ← to Reject | → to Accept
@@ -168,28 +175,43 @@ export default function JobCarousel() {
         </Carousel>
       </div>
 
-      {/* ✅ Back to Listings Button */}
       <Link href="/freelancer/job-listings">
         <button className="mt-10 px-6 py-2 bg-[#1860F1] text-white rounded hover:bg-[#BBEF5D] hover:text-[#1860F1] transition">
           Back to Job Listings Overview
         </button>
       </Link>
 
-      {/* ✅ Modal for job accept/fail */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full text-center">
-            <h2 className={`text-2xl font-bold mb-4 ${modalSuccess ? 'text-green-600' : 'text-red-600'}`}>
+            <h2
+              className={`text-2xl font-bold mb-4 ${
+                modalSuccess ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
               {modalSuccess ? 'Job Accepted!' : 'Failed to accept job.'}
             </h2>
 
             {modalSuccess && acceptedJob ? (
               <div className="text-left space-y-2 text-sm text-gray-700">
-                <p><span className="font-semibold">Title:</span> {acceptedJob.title}</p>
-                <p><span className="font-semibold">Category:</span> {acceptedJob.category}</p>
-                <p><span className="font-semibold">Description:</span> {acceptedJob.description}</p>
-                <p><span className="font-semibold">Skills:</span> {acceptedJob.skills.join(', ')}</p>
-                <p><span className="font-semibold">Price:</span> ${acceptedJob.price}</p>
+                <p>
+                  <span className="font-semibold">Title:</span> {acceptedJob.title}
+                </p>
+                <p>
+                  <span className="font-semibold">Category:</span>{' '}
+                  {acceptedJob.category}
+                </p>
+                <p>
+                  <span className="font-semibold">Description:</span>{' '}
+                  {acceptedJob.description}
+                </p>
+                <p>
+                  <span className="font-semibold">Skills:</span>{' '}
+                  {acceptedJob.skills.join(', ')}
+                </p>
+                <p>
+                  <span className="font-semibold">Price:</span> ${acceptedJob.price}
+                </p>
               </div>
             ) : (
               <p className="text-gray-600 text-sm">Please try again!</p>
