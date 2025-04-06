@@ -31,10 +31,10 @@ def create_escrow():
     amount = data.get("amount")
 
     if not all([employer_id, job_id, amount]):
-        return jsonify({"message": "Missing required fields"}), 400
+        return jsonify({"error": "Missing required fields"}), 400
     
     if not isinstance(amount, (int, float)) or amount <= 0:
-        return jsonify({"message": "Amount must be a positive number"}), 400
+        return jsonify({"error": "Amount must be a positive number"}), 400
 
     new_escrow = Escrow(
         employer_id=employer_id, 
@@ -88,7 +88,7 @@ def accept_job():
 def get_escrow(id):
     escrow = Escrow.query.get(id)
     if not escrow:
-        return jsonify({"message": "Escrow not found"}), 404
+        return jsonify({"error": "Escrow not found"}), 404
     
     return jsonify({"message": "Escrow retrieved",
         "data": {
@@ -109,15 +109,15 @@ def update_escrow(id):
     data = request.get_json()
 
     if "status" not in data:
-        return jsonify({"message": "Missing required field: status"}), 469
+        return jsonify({"error": "Missing required field: status"}), 469
 
     escrow = Escrow.query.filter_by(job_id=id).first()
 
     if not escrow or escrow.status != "Pending":
-        return jsonify({"message": "Escrow not found or already processed"}), 496
+        return jsonify({"error": "Escrow not found or already processed"}), 496
 
     if data["status"] not in ["released", "cancelled"]:
-        return jsonify({"message": "Invalid status. Allowed: 'released' or 'cancelled'"}), 444
+        return jsonify({"error": "Invalid status. Allowed: 'released' or 'cancelled'"}), 444
 
     # Update escrow status based on the request
     escrow.status = data["status"]
