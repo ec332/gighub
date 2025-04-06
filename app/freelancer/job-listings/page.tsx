@@ -115,6 +115,7 @@ export default function JobListings() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 flex-col space-y-4">
         <motion.div
+          animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
         >
           <Image
@@ -129,6 +130,7 @@ export default function JobListings() {
       </div>
     );
   }
+  
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   return (

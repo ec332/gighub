@@ -44,15 +44,15 @@ def accept_job():
         freelancer_id = job_details.get('freelancer_id')
         employer_id = job_details.get('employer_id')
 
-        # Step 4: Update freelancer ID in Escrow Service
-        job_response = requests.put(ESCROW_SERVICE_URL, json={'job_id': job_id, 'freelancer_id' : freelancer_id})
-        if job_response.status_code != 200:
-            raise Exception(f"Error updating job status: {job_response.text}")
-        job_data = job_response.json()
-        print(f"Job status updated, details: {job_data}")
+        # Step 1: Update freelancer ID in Escrow Service
+        escrow_response = requests.put(ESCROW_SERVICE_URL, json={'job_id': job_id, 'freelancer_id' : freelancer_id})
+        if escrow_response.status_code != 200:
+            raise Exception(f"Error updating job status: {escrow_response.text}")
+        escrow_data = escrow_response.json()
+        print(f"Job status updated, details: {escrow_data}")
 
 
-        # Step 5: Update job status to Closed & freelancer ID
+        # Step 2: Update job status to Closed & freelancer ID
         print(f"Invoking job microservice to update job status to Closed for job ID: {job_id}")
         job_response = requests.put(f'{JOB_SERVICE_URL}/{job_id}', json={'status': 'close', 'freelancer_id': freelancer_id})
         if job_response.status_code != 200:
@@ -60,7 +60,7 @@ def accept_job():
         job_data = job_response.json()
         print(f"Job status updated, details: {job_data}")
 
-        # Step 2: Send job accepted notification to employer via RabbitMQ (WORKS)
+        # Step 3: Send job accepted notification to employer via RabbitMQ (WORKS)
         try:
             connection = pika.BlockingConnection(pika.URLParameters(AMQP_URL))
             channel = connection.channel()
@@ -102,7 +102,7 @@ def accept_job():
         error_message = str(e)
         print("Error occured, Logging to kafka...")
         log_error_to_kafka(error_message, topic="accept-job-errors")
-        return jsonify({"error": "An error occurred while accepting the job", "details": error_message}), 500
+        return jsonify({"error": "An error has occured. It has been forwarded to our backend teams for a fix!"}), 500
     
     return jsonify({"message": f"Job accepted, and notification sent"}), 200
     
