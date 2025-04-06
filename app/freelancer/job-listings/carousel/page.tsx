@@ -5,6 +5,9 @@ import { useSession } from 'next-auth/react';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import doveIcon from '@/public/dove.png';
 
 interface Job {
   id: number;
@@ -142,7 +145,26 @@ export default function JobCarousel() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading jobs...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 flex-col space-y-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+        >
+          <Image
+            src={doveIcon}
+            alt="Loading Dove"
+            width={64}
+            height={64}
+            className="drop-shadow-md"
+          />
+        </motion.div>
+        <p className="text-lg font-semibold text-[#1860f1] animate-pulse">Loading...</p>
+      </div>
+    );
+  }
+  
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
   if (!jobs.length || jobs.every((job) => job.status === 'close')) {
     return <div className="p-8 text-gray-500">No more jobs to display.</div>;
